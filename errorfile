@@ -1,0 +1,46 @@
+DEBUG: Console loggers configured.
+=== Starting /glade/work/emaroon/mdtf/MDTF-diagnostics/mdtf_framework.py
+
+DEBUG: Using selector: EpollSelector
+DEBUG: Reading file /glade/work/emaroon/mdtf/MDTF-diagnostics/data/modifiers.jsonc
+DEBUG: Reading file /glade/work/emaroon/mdtf/MDTF-diagnostics/data/fieldlist_NCAR.jsonc
+DEBUG: Adding variable name convention 'NCAR'
+DEBUG: Reading file /glade/work/emaroon/mdtf/MDTF-diagnostics/data/fieldlist_CMIP.jsonc
+DEBUG: Adding variable name convention 'CMIP'
+DEBUG: Reading file /glade/work/emaroon/mdtf/MDTF-diagnostics/data/fieldlist_GFDL.jsonc
+DEBUG: Adding variable name convention 'GFDL'
+PACKAGE SETTINGS:
+  case_list(0): 
+    CASENAME: DUMMY
+    model: CESM
+    convention: CESM
+    FIRSTYR: 1975
+    LASTYR: 1977
+    pod_list: 
+      natl_ocean
+    experiment: ""
+  paths: 
+    CODE_ROOT: /glade/work/emaroon/mdtf/MDTF-diagnostics
+    OBS_DATA_ROOT: /glade/work/emaroon/mdtf/inputdata/obs_data
+    MODEL_DATA_ROOT: /glade/work/emaroon/mdtf/inputdata/model
+    WORKING_DIR: /glade/work/emaroon/mdtf/wkdir
+    OUTPUT_DIR: /glade/work/emaroon/mdtf/wkdir
+    conda_root: /glade/u/home/emaroon/miniconda3
+    conda_env_root: /glade/u/home/emaroon/miniconda3/envs
+    TEMP_DIR_ROOT: /glade/work/emaroon/mdtf/wkdir
+  settings: 
+    verbose: 1
+    file_transfer_timeout: 300
+    convention: CMIP
+    data_manager: Local_File
+    environment_manager: Conda
+    runtime_manager: subprocess
+    output_manager: html
+    make_variab_tar: true
+  env_vars: 
+    RGB: /glade/work/emaroon/mdtf/MDTF-diagnostics/shared/rgb
+    MPLBACKEND: Agg
+### MDTFFramework: initializing case 'DUMMY'.
+DEBUG: Setting CASE_ROOT_DIR to MODEL_DATA_ROOT = '/glade/work/emaroon/mdtf/inputdata/model'.
+DEBUG: 'sample_dataset' not supplied, using CASENAME = 'DUMMY'.
+DEBUG: Using convention 'NCAR' based on alias 'CESM'.
