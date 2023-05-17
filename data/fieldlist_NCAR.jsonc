@@ -11,6 +11,8 @@
     // only used for taking slices, unit conversion
     "lon": {"axis": "X", "standard_name": "longitude", "units": "degrees_east"},
     "lat": {"axis": "Y", "standard_name": "latitude", "units": "degrees_north"},
+    "nlon": {"axis": "X", "standard_name": "nlon", "units": "count_x"},
+    "nlat": {"axis": "Y", "standard_name": "nlat", "units": "count_y"},
     "plev": {
       "standard_name": "air_pressure",
       "units": "hPa",
@@ -235,6 +237,12 @@
       "standard_name": "atmosphere_mass_content_of_water_vapor",
       "units": "kg m-2",
       "ndim": 3
+    },
+    // POP variables 
+    "SST": {
+       "standard_name": "Potential Temperature",
+       "units": "degC",
+       "ndim": 3
     }
     // Variables for SM_ET_coupling module
     // "mrsos": {

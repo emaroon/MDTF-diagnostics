@@ -46,13 +46,15 @@
   // "dimensions" attribute for each variable must correspond to a coordinate
   // named here.
   "dimensions": {
-    "lat": {"standard_name": "latitude"},
-    "lon": {"standard_name": "longitude"},
-  "time": {"standard_name": "time"}
- // "nlat": {"standard_name": "latitude"},
- // "nlon": {"standard_name": "longitude"},
- // "TLONG": {"standard_name": "longitude"},
- // "TLAT": {"standard_name": "latitude"},
+//    "nlat": {"standard_name": "latitude"},
+//    "nlon": {"standard_name": "longitude"},
+  "time": {"standard_name": "time"},
+//  "nlat": {"standard_name": "latitude"},
+//  "nlon": {"standard_name": "longitude"},
+  "nlat": {"standard_name": "nlat"},
+  "nlon": {"standard_name": "nlon"}
+// "TLONG": {"standard_name": "longitude"},
+ // "TLAT": {"standard_name": "latitude"}
  // "z_t": {"standard_name": "depth"}
   },
 
@@ -68,7 +70,7 @@
       // is used to reliably identify the variable if it's called by a different
       // name in the output format of the model being analyzed.
    //   "standard_name" : "air_temperature",
-     "standard_name" : "ocean_temperature",
+     "standard_name" : "Potential Temperature",
       // Units the script expects this variable to be in (UDUnits2- compatible
       // string). If the model being analyzed provides the variable in different
       // units, the MDTF package will do unit conversion before calling the script.
@@ -80,7 +82,7 @@
      "frequency" : "mon",
       // Coordinates of the variable (defined in the section above.)
    //   "dimensions": ["time", "lat", "lon"],
-     "dimensions": ["time", "lat", "lon"]
+     "dimensions": ["time", "nlat", "nlon"]
       // Modifier attribute for variables defined on specific surfaces.
       // The current recognized value is "atmos_height" for variables
       // defined at atmospheric heights above the ground in meters.
