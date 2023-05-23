@@ -242,8 +242,14 @@
     "SST": {
        "standard_name": "Potential Temperature",
        "units": "degC",
-       "ndim": 3
+       "ndim": 4
+    },
+    "TEMP": {
+       "standard_name": "Temperature",
+       "units": "degC",
+       "ndim": 4
     }
+
     // Variables for SM_ET_coupling module
     // "mrsos": {
     //   "standard_name": "mass_content_of_water_in_soil_layer",

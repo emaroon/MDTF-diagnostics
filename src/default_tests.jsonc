@@ -22,8 +22,8 @@
       "convention" : "CESM",
       //"FIRSTYR" : 1977,
       //"LASTYR" : 1981,
-      "FIRSTYR" : 1975,
-      "LASTYR": 1977,
+      "FIRSTYR" : 1593,
+      "LASTYR": 1595,
       "pod_list": [
           // Optional: PODs to run for this model only (defaults to all)
           "natl_ocean"
@@ -35,7 +35,7 @@
           // "precip_diurnal_cycle",
           // "ocn_surf_flux_diag",
           // "mixed_layer_depth",
-          // "tropical_pacific_sea_level",
+          // "tropical_pacific_sea_level"
           // "temp_extremes_distshape",
           // "precip_buoy_diag"
       ]
