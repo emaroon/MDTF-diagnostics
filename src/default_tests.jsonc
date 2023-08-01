@@ -16,17 +16,19 @@
     // uncomment the second to run NOAA-GFDL-AM4 only for the MJO_prop_amp POD,
     // and likewise for the SM_ET_coupling POD.
     {
-      "CASENAME" : "QBOi.EXP1.AMIP.001",
+    //  "CASENAME" : "QBOi.EXP1.AMIP.001",
+      "CASENAME" : "DUMMY",
       "model" : "CESM",
       "convention" : "CESM",
-      "FIRSTYR" : 1977,
-      "LASTYR" : 1981,
+      "FIRSTYR" : 1975,
+      "LASTYR" : 1977,
       "pod_list": [
           // Optional: PODs to run for this model only (defaults to all)
-          "Wheeler_Kiladis",
-          "EOF_500hPa",
-          "MJO_suite",
-          "MJO_teleconnection"
+          "natl_ocean"
+          //"Wheeler_Kiladis",
+          //"EOF_500hPa",
+          //"MJO_suite",
+          //"MJO_teleconnection"
           // "convective_transition_diag",
           // "precip_diurnal_cycle",
           // "ocn_surf_flux_diag",
@@ -84,13 +86,13 @@
   // Location of the Anaconda/miniconda installation to use for managing
   // dependencies (path returned by running `conda info --base`.) If empty,
   // framework will attempt to determine location of system's conda installation.
-  "conda_root": "",
+  "conda_root": "/glade/u/home/emaroon/miniconda3",
 
   // Directory containing the framework-specific conda environments. This should
   // be equal to the "--env_dir" flag passed to conda_env_setup.sh. If left
   // blank, the framework will look for its environments in the system default
   // location.
-  "conda_env_root": "",
+  "conda_env_root": "/glade/u/home/emaroon/miniconda3/envs",
 
   // SETTINGS ------------------------------------------------------------------
   // Any command-line option recognized by the mdtf script (type `mdtf --help`)
@@ -101,7 +103,8 @@
     
   // Type of data that POD(s) will analyze
   // "single_run" (default) or "multi_run"
-  "data_type": "single_run",
+  //"data_type": "single_run",
+  "data_type": "no_pp",
 
   // Method used to manage dependencies.
   "environment_manager": "Conda",
