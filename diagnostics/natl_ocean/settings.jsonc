@@ -49,13 +49,13 @@
 //    "nlat": {"standard_name": "latitude"},
 //    "nlon": {"standard_name": "longitude"},
   "time": {"standard_name": "time"},
-//  "nlat": {"standard_name": "latitude"},
-//  "nlon": {"standard_name": "longitude"}
+  "nlat": {"standard_name": "latitude"},
+  "nlon": {"standard_name": "longitude"},
 //  "geolat": {"standard_name": "latitude"},
 //  "geolon": {"standard_name": "longitude"}
- "TLONG": {"standard_name": "longitude"},
-  "TLAT": {"standard_name": "latitude"}
-// "z_t": {"standard_name": "depth"}
+// "TLONG": {"standard_name": "longitude"},
+//  "TLAT": {"standard_name": "latitude"}
+ "z_t": {"standard_name": "depth"}
   },
 
   // In this section, you describe what model data your diagnostic uses. Add one
@@ -83,7 +83,7 @@
       // Coordinates of the variable (defined in the section above.)
    //   "dimensions": ["time", "lat", "lon"],
     // "dimensions": ["time", "nlat", "nlon"]
-   "dimensions": ["time", "TLAT", "TLONG"]
+   "dimensions": ["time", "z_t", "TLAT", "TLONG"]
       // Modifier attribute for variables defined on specific surfaces.
       // The current recognized value is "atmos_height" for variables
       // defined at atmospheric heights above the ground in meters.

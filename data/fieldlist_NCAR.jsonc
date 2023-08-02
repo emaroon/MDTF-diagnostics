@@ -11,8 +11,11 @@
     // only used for taking slices, unit conversion
     "lon": {"axis": "X", "standard_name": "longitude", "units": "degrees_east"},
     "lat": {"axis": "Y", "standard_name": "latitude", "units": "degrees_north"},
-    "TLONG": {"axis": "X", "standard_name": "array of t-grid longitudes", "units": "degrees_east"},
-    "TLAT": {"axis": "Y", "standard_name": "array of t-grid latitudes", "units": "degrees_north"},
+//    "TLONG": {"axis": "X", "standard_name": "array of t-grid longitudes", "units": "degrees_east"},
+//    "TLAT": {"axis": "Y", "standard_name": "array of t-grid latitudes", "units": "degrees_north"},
+    "nlon": {"axis": "X", "standard_name": "array of t-grid longitudes", "units": "degrees_east"},
+    "nlat": {"axis": "Y", "standard_name": "array of t-grid latitudes", "units": "degrees_north"},
+    "z_t": {"axis": "Z", "standard_name": "depth", "units": "m", "positive": "down"},
     "plev": {
       "standard_name": "air_pressure",
       "units": "hPa",
