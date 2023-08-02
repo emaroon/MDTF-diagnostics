@@ -49,13 +49,13 @@
 //    "nlat": {"standard_name": "latitude"},
 //    "nlon": {"standard_name": "longitude"},
   "time": {"standard_name": "time"},
-  "nlat": {"standard_name": "latitude"},
-  "nlon": {"standard_name": "longitude"},
+//  "nlat": {"standard_name": "latitude"},
+//  "nlon": {"standard_name": "longitude"},
 //  "geolat": {"standard_name": "latitude"},
 //  "geolon": {"standard_name": "longitude"}
-// "TLONG": {"standard_name": "longitude"},
-//  "TLAT": {"standard_name": "latitude"}
- "z_t": {"standard_name": "depth"}
+ "TLONG": {"standard_name": "longitude"},
+  "TLAT": {"standard_name": "latitude"},
+ "z_t": {"standard_name": "depth", "units": "centimeters"}
   },
 
   // In this section, you describe what model data your diagnostic uses. Add one
