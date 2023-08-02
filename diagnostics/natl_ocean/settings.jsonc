@@ -55,7 +55,7 @@
 //  "geolon": {"standard_name": "longitude"}
  "TLONG": {"standard_name": "longitude"},
   "TLAT": {"standard_name": "latitude"},
- "z_t": {"standard_name": "depth", "units": "centimeters"}
+  "z_t": {"standard_name": "depth", "units": "centimeters"}
   },
 
   // In this section, you describe what model data your diagnostic uses. Add one
