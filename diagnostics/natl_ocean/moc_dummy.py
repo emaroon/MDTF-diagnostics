@@ -99,21 +99,20 @@ model_dataset = xr.open_dataset(input_path)
 # variety of models. For this reason, variable names should not be hard-coded
 # but instead set from environment variables. 
 #
-tas_var_name = os.environ["tos_var"]
+tos_var_name = os.environ["tos_var"]
 # For safety, don't even assume that the time dimension of the input file is
 # named "time":
 time_coord_name = os.environ["time_coord"]
 
 # The only computation done here: compute the time average of input data
-tas_data = model_dataset[tas_var_name]
-model_mean_tas = tas_data.mean(dim = time_coord_name)
+tos_data = model_dataset[tos_var_name]
+model_mean_tos = tos_data.mean(dim = time_coord_name)
 # Note that we supplied the observational data as time averages, to save space
 # and avoid having to repeat that calculation each time the diagnostic is run.
 
 # Logging relevant debugging or progress information is a good idea. Anything
 # your diagnostic prints to STDOUT will be saved to its own log file.
 print("Computed time average of {tos_var} for {CASENAME}.".format(**os.environ))
-
 
 ### 3) Saving output data: #####################################################
 #
@@ -126,7 +125,7 @@ print("Computed time average of {tos_var} for {CASENAME}.".format(**os.environ))
 out_path = "{WK_DIR}/model/netCDF/temp_means.nc".format(**os.environ)
 
 # write out time averages as a netcdf file
-model_mean_tas.to_netcdf(out_path)
+model_mean_tos.to_netcdf(out_path)
 
 
 ### 4) Saving output plots: ####################################################
@@ -146,14 +145,14 @@ def plot_and_save_figure(model_or_obs, title_string, dataset):
     dataset.plot(ax = plot_axes)
     plot_axes.set_title(title_string)
     # save the plot in the right location
-    plot_path = "{WK_DIR}/{model_or_obs}/PS/example_{model_or_obs}_plot.eps".format(
+    plot_path = "{WK_DIR}/{model_or_obs}/TOS/example_{model_or_obs}_plot.eps".format(
         model_or_obs=model_or_obs, **os.environ
     )
     plt.savefig(plot_path, bbox_inches='tight')
 # end of function
 
 # set an informative title using info about the analysis set in env vars
-title_string = "{CASENAME}: mean {tas_var} ({FIRSTYR}-{LASTYR})".format(**os.environ)
+title_string = "{CASENAME}: mean {tos_var} ({FIRSTYR}-{LASTYR})".format(**os.environ)
 # Plot the model data:
 plot_and_save_figure("model", title_string, model_mean_tos)
 
@@ -173,11 +172,11 @@ input_path = "{OBS_DATA}/SST/sst.mnmean.dummy.nc".format(**os.environ)
 
 # command to load the netcdf file
 obs_dataset = xr.open_dataset(input_path)
-obs_mean_tas = obs_dataset['mean_tos']
+obs_mean_tos = obs_dataset['mean_tos'].mean('time')
 
 # Plot the observational data:
-title_string = "Observations: mean {tas_vor}".format(**os.environ)
-plot_and_save_figure("obs", title_string, obs_mean_tas)
+title_string = "Observations: mean {tos_var}".format(**os.environ)
+plot_and_save_figure("obs", title_string, obs_mean_tos)
 
 
 ### 6) Cleaning up: ############################################################

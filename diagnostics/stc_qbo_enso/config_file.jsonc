@@ -106,7 +106,6 @@
   // Type of data that POD(s) will analyze
   // "single_run" (default) or "multi_run"
   "data_type": "single_run",
-  //"data_type": "no_pp",
 
   // Method used to manage dependencies.
   "environment_manager": "Conda",
