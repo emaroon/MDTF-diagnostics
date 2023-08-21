@@ -1,4 +1,4 @@
-# MDTF Example Diagnostic POD
+# MDTF North Atlantic Ocean POD
 # ================================================================================
 # This script does a simple diagnostic calculation to illustrate how to adapt code
 # for use in the MDTF diagnostic framework. The main change is to set input/output
@@ -87,7 +87,8 @@ import matplotlib.pyplot as plt    # python library we use to make plots
 # variable called TAS_FILE. This variable is set by the framework to let the 
 # script know where the locally downloaded copy of the data for this variable
 # (which we called "tas") is.
-model_path = os.environ["SST_FILE"]
+sst_path = os.environ["SST_FILE"]
+salt_path = os.environ["SALT_FILE"]
 wk_dir = "{WK_DIR}".format(**os.environ)
 obs_dir = "{OBS_DATA}/".format(**os.environ)
 output_dir = wk_dir+'/model/'
@@ -97,8 +98,10 @@ modelname = "{CASENAME}".format(**os.environ)
 
 
 # command to load the netcdf file
-model_dataset = xr.open_dataset(model_path)
-
+sst_dataset = xr.open_dataset(sst_path)
+salt_dataset = xr.open_dataset(salt_path)
+shf_dataset = xr.open_datatset(shf_path)
+sfwf_dataset = xr.open_dataset(sfwf_path)
 
 ### 2) Doing computations: #####################################################
 #
@@ -106,14 +109,27 @@ model_dataset = xr.open_dataset(model_path)
 # variety of models. For this reason, variable names should not be hard-coded
 # but instead set from environment variables. 
 #
-tos_var_name = os.environ["SST_var"]
+sst_var_name = os.environ["SST_var"]
+salt_var_name = os.environ["SALT_var"]
+shf_var_name = os.environ["SHF_var"]
+sfwf_var_name = os.environ["SFWF_var"]
+
 # For safety, don't even assume that the time dimension of the input file is
 # named "time":
 time_coord_name = os.environ["time_coord"]
+depth_coord_name = os.environ["depth_coord"]
+print('IAMHERE',depth_coord_name)
 
 # The only computation done here: compute the time average of input data
-tos_data = model_dataset[tos_var_name]
-model_mean_tos = tos_data.mean(time_coord_name)
+sst_data = sst_dataset[sst_var_name]
+model_mean_sst = sst_data.mean(time_coord_name)
+sss_data = salt_dataset[sst_var_name].isel({depth_coordname:0})
+model_mean_sss = sss_data.mean(time_coord_name)
+shf_data = shf_dataset[shf_var_name]
+model_mean_shf = shf_data.mean(time_coord_name)
+sfwf_data = sfwf_dataset[sfwf_var_name]
+model_mean_sfwf = sfwf_data.mean(time_coord_name)
+
 # Note that we supplied the observational data as time averages, to save space
 # and avoid having to repeat that calculation each time the diagnostic is run.
 
@@ -129,10 +145,16 @@ print("Computed time average of {SST_var} for {CASENAME}.".format(**os.environ))
 # any format (as long as it's documented) and should be written to the 
 # directory <WK_DIR>/model/netCDF (created by the framework).
 #
-out_path = output_dir+"/netCDF/temp_means.nc".format(**os.environ)
+sst_out_path = output_dir+"/netCDF/sst_means.nc".format(**os.environ)
+sss_out_path = output_dir+"/netCDF/sss_means.nc".format(**os.environ)
+shf_out_path = output_dir+"/netCDF/shf_means.nc".format(**os.environ)
+sfwf_out_path = output_dir+"/netCDF/sfwf_means.nc".format(**os.environ)
 
 # write out time averages as a netcdf file
-model_mean_tos.to_netcdf(out_path)
+model_mean_sst.to_netcdf(sst_out_path)
+model_mean_sss.to_netcdf(sss_out_path)
+model_mean_shf.to_netcdf(shf_out_path)
+model_mean_sfwf.to_netcdf(sfwf_out_path)
 
 
 ### 4) Saving output plots: ####################################################
@@ -144,7 +166,7 @@ model_mean_tos.to_netcdf(out_path)
 
 # Define a python function to make the plot, since we'll be doing it twice and
 # we don't want to repeat ourselves.
-def plot_and_save_figure(model_or_obs, title_string, dataset):
+def plot_and_save_figure(model_or_obs, title_string, fieldname, dataset):
     # initialize the plot
     plt.figure(figsize=(12,6))
     plot_axes = plt.subplot(1,1,1)
@@ -152,8 +174,8 @@ def plot_and_save_figure(model_or_obs, title_string, dataset):
     dataset.plot(ax = plot_axes)
     plot_axes.set_title(title_string)
     # save the plot in the right location
-    plot_path = "{WK_DIR}/{model_or_obs}/example_{model_or_obs}_plot.png".format(
-        model_or_obs=model_or_obs, **os.environ
+    plot_path = "{WK_DIR}/{model_or_obs}/example_{model_or_obs}_{fieldname}_plot.png".format(
+        model_or_obs=model_or_obs, fieldname=fieldname, **os.environ
     )
     plt.savefig(plot_path, bbox_inches='tight')
 # end of function
@@ -161,7 +183,17 @@ def plot_and_save_figure(model_or_obs, title_string, dataset):
 # set an informative title using info about the analysis set in env vars
 title_string = "{CASENAME}: mean {SST_var} ({FIRSTYR}-{LASTYR})".format(**os.environ)
 # Plot the model data:
-plot_and_save_figure("model", title_string, model_mean_tos)
+plot_and_save_figure("model", title_string, sst_var_name , model_mean_sst)
+
+title_string = "{CASENAME}: mean {SALT_var} ({FIRSTYR}-{LASTYR})".format(**os.environ)
+plot_and_save_figure("model", title_string, sss_var_name, model_mean_sss)
+
+title_string = "{CASENAME}: mean {SHF_var} ({FIRSTYR}-{LASTYR})".format(**os.environ)
+plot_and_save_figure("model", title_string, shf_var_name, model_mean_shf)
+
+title_string = "{CASENAME}: mean {SFWF_var} ({FIRSTYR}-{LASTYR})".format(**os.environ)
+plot_and_save_figure("model", title_string, sfwf_var_name, model_mean_SFWF)
+
 
 
 ### 5) Loading obs data files & plotting obs figures: ##########################

@@ -7,22 +7,10 @@
 //
 {
   "settings" : {
-    // Name of the driver script. This should be a single script, taking no
-    // command-line arguments, which runs the entire analysis (calling any other
-    // scripts or subroutines as needed.)
     "driver" : "moc_dummy.py",
-
-    // Human-readable name of the diagnostic. May contain spaces.
-    "long_name" : "Example diagnostic",
-
-    // Modeling realm. If your diagnostic uses data from multiple realms, give
-    // this as a list.
-    //"realm" : "atmos",
+    "long_name" : "Subtropical to Subpolar North Atlantic Ocean Diagnostics",
     "realm" : "ocean",
-
-    // Human-readable name of the diagnostic. May contain spaces. This
-    // is used to describe your diagnostic on the top-level index.html page.
-    "description" : "Example diagnostic",
+    "description" : "Subtropical to Subpolar North Atlantic Ocean Diagnostics",
 
     // (optional) Any diagnostic-specific environment variables, given as
     // key:value pairs. The user can't change these at runtime, but they can be
@@ -46,24 +34,16 @@
   // "dimensions" attribute for each variable must correspond to a coordinate
   // named here.
   "dimensions": {
-//    "nlat": {"standard_name": "latitude"},
-//    "nlon": {"standard_name": "longitude"},
-  "time": {"standard_name": "time"},
-//  "nlat": {"standard_name": "latitude"},
-//  "nlon": {"standard_name": "longitude"}
-//  "geolat": {"standard_name": "latitude"},
-//  "geolon": {"standard_name": "longitude"}
-  "TLONG": {
+    "time": {"standard_name": "time"},
+    "TLONG": {
              "standard_name": "array of t-grid longitudes",
              "axis": "X"
            },
-  "TLAT": {
+    "TLAT": {
              "standard_name": "array of t-grid latitudes",
              "axis": "Y"
           },
-// "TLONG": {"standard_name": "longitude"},
-//  "TLAT": {"standard_name": "latitude"}
- "z_t": {
+    "z_t": {
            "standard_name": "depth from surface to midpoint of layer", 
            "axis": "Z", 
            "units": "centimeters",
@@ -75,34 +55,36 @@
   // list entry (the section in curly braces) for each variable, separated by
   // commas.
   "varlist" : {
-    // Variable identifier. An environment variable with this name will be set
-    // to what the corresponding field is called in the model being analyzed.
-  //  "tas": {
      "SST": {
-      // Standard name for the variable according to the CF conventions. This
-      // is used to reliably identify the variable if it's called by a different
-      // name in the output format of the model being analyzed.
-   //   "standard_name" : "air_temperature",
-     "standard_name" : "Potential Temperature",
-      // Units the script expects this variable to be in (UDUnits2- compatible
-      // string). If the model being analyzed provides the variable in different
-      // units, the MDTF package will do unit conversion before calling the script.
-   //   "units": "K",
-    "units": "degC",
-      // Time frequency the data should be sampled at. Currently recognized
-      // values are '1hr', '3hr', '6hr', 'day' and 'mon'.
-   //   "frequency" : "mon",
-     "frequency" : "mon",
-      // Coordinates of the variable (defined in the section above.)
-   //   "dimensions": ["time", "lat", "lon"],
-    // "dimensions": ["time", "nlat", "nlon"]
-   "dimensions": ["time", "z_t", "TLAT", "TLONG"]
-      // Modifier attribute for variables defined on specific surfaces.
-      // The current recognized value is "atmos_height" for variables
-      // defined at atmospheric heights above the ground in meters.
-      // (e.g., 2m temperature in this example, or 10m wind components).
-   //   "modifier": "atmos_height"
-    }
-    // If we needed a second variable, we'd list it here.
+       "standard_name" : "Potential Temperature",
+       "units": "degC",
+       "frequency" : "mon",
+       "dimensions": ["time", "z_t", "TLAT", "TLONG"]
+       },
+     "SALT": {
+       "standard_name" : "Salinity",
+       "units": "psu",
+       "frequency" : "mon",
+       "dimensions": ["time", "z_t", "TLAT", "TLONG"]
+       }, 
+     "SHF": {
+       "standard_name" : "Surface Heat Flux",
+       "units": "W/m2",
+       "frequency" : "mon",
+     "dimensions": ["time", "TLAT", "TLONG"]
+       },
+      "SFWF": {
+       "standard_name" : "Surface Freshwater Flux",
+       "units": "kg/m2/s",
+       "frequency" : "mon",
+       "dimensions": ["time", "TLAT", "TLONG"]
+       },
+       "TAREA": {
+       "standard_name" : "cell area",
+       "units": "centimeters^2",
+       "dimensions": ["TLAT", "TLONG"]
+       }
+        
+   // If we needed a second variable, we'd list it here.
   }
 }
