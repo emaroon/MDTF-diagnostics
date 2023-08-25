@@ -136,9 +136,13 @@ sfwf_data = sfwf_dataset[sfwf_var_name]
 model_mean_sfwf = sfwf_data.mean(time_coord_name)
 tarea_data = sfwf_dataset[tarea_var_name]
 
-##WMT calculation goes here
+##bias script goes here
 
-##MOC calculation goes here
+##WMT script goes here
+
+##MOC script goes here
+
+##Synthesis script goes here
 
 
 # Note that we supplied the observational data as time averages, to save space
