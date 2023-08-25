@@ -89,6 +89,10 @@ import matplotlib.pyplot as plt    # python library we use to make plots
 # (which we called "tas") is.
 sst_path = os.environ["SST_FILE"]
 salt_path = os.environ["SALT_FILE"]
+shf_path = os.environ["SHF_FILE"]
+sfwf_path = os.environ["SFWF_FILE"]
+tarea_path = os.environ["TAREA_FILE"]
+
 wk_dir = "{WK_DIR}".format(**os.environ)
 obs_dir = "{OBS_DATA}/".format(**os.environ)
 output_dir = wk_dir+'/model/'
@@ -100,8 +104,9 @@ modelname = "{CASENAME}".format(**os.environ)
 # command to load the netcdf file
 sst_dataset = xr.open_dataset(sst_path)
 salt_dataset = xr.open_dataset(salt_path)
-shf_dataset = xr.open_datatset(shf_path)
+shf_dataset = xr.open_dataset(shf_path)
 sfwf_dataset = xr.open_dataset(sfwf_path)
+tarea_dataset = xr.open_dataset(tarea_path)
 
 ### 2) Doing computations: #####################################################
 #
@@ -113,22 +118,28 @@ sst_var_name = os.environ["SST_var"]
 salt_var_name = os.environ["SALT_var"]
 shf_var_name = os.environ["SHF_var"]
 sfwf_var_name = os.environ["SFWF_var"]
+tarea_var_name = os.environ["TAREA_var"]
 
 # For safety, don't even assume that the time dimension of the input file is
 # named "time":
 time_coord_name = os.environ["time_coord"]
-depth_coord_name = os.environ["depth_coord"]
-print('IAMHERE',depth_coord_name)
+depth_coord_name = os.environ["z_t_coord"]
 
 # The only computation done here: compute the time average of input data
 sst_data = sst_dataset[sst_var_name]
 model_mean_sst = sst_data.mean(time_coord_name)
-sss_data = salt_dataset[sst_var_name].isel({depth_coordname:0})
+sss_data = salt_dataset[salt_var_name].isel({depth_coord_name:0})
 model_mean_sss = sss_data.mean(time_coord_name)
 shf_data = shf_dataset[shf_var_name]
 model_mean_shf = shf_data.mean(time_coord_name)
 sfwf_data = sfwf_dataset[sfwf_var_name]
 model_mean_sfwf = sfwf_data.mean(time_coord_name)
+tarea_data = sfwf_dataset[tarea_var_name]
+
+##WMT calculation goes here
+
+##MOC calculation goes here
+
 
 # Note that we supplied the observational data as time averages, to save space
 # and avoid having to repeat that calculation each time the diagnostic is run.
@@ -149,12 +160,18 @@ sst_out_path = output_dir+"/netCDF/sst_means.nc".format(**os.environ)
 sss_out_path = output_dir+"/netCDF/sss_means.nc".format(**os.environ)
 shf_out_path = output_dir+"/netCDF/shf_means.nc".format(**os.environ)
 sfwf_out_path = output_dir+"/netCDF/sfwf_means.nc".format(**os.environ)
+tarea_out_path = output_dir+"/netCDF/tarea.nc".format(**os.environ)
+
+print('pathsmade')
 
 # write out time averages as a netcdf file
 model_mean_sst.to_netcdf(sst_out_path)
 model_mean_sss.to_netcdf(sss_out_path)
 model_mean_shf.to_netcdf(shf_out_path)
 model_mean_sfwf.to_netcdf(sfwf_out_path)
+tarea_data.to_netcdf(tarea_out_path)
+
+print('filessaved')
 
 
 ### 4) Saving output plots: ####################################################
@@ -186,15 +203,18 @@ title_string = "{CASENAME}: mean {SST_var} ({FIRSTYR}-{LASTYR})".format(**os.env
 plot_and_save_figure("model", title_string, sst_var_name , model_mean_sst)
 
 title_string = "{CASENAME}: mean {SALT_var} ({FIRSTYR}-{LASTYR})".format(**os.environ)
-plot_and_save_figure("model", title_string, sss_var_name, model_mean_sss)
+plot_and_save_figure("model", title_string, salt_var_name, model_mean_sss)
 
 title_string = "{CASENAME}: mean {SHF_var} ({FIRSTYR}-{LASTYR})".format(**os.environ)
 plot_and_save_figure("model", title_string, shf_var_name, model_mean_shf)
 
 title_string = "{CASENAME}: mean {SFWF_var} ({FIRSTYR}-{LASTYR})".format(**os.environ)
-plot_and_save_figure("model", title_string, sfwf_var_name, model_mean_SFWF)
+plot_and_save_figure("model", title_string, sfwf_var_name, model_mean_sfwf)
 
+title_string = "{CASENAME}: {TAREA_var} ".format(**os.environ)
+plot_and_save_figure("model", title_string, tarea_var_name, tarea_data)
 
+print('plots saved')
 
 ### 5) Loading obs data files & plotting obs figures: ##########################
 #
@@ -213,11 +233,11 @@ obs_path = "{OBS_DATA}/SST/sst.mnmean.nc".format(**os.environ)
 obs_dataset = xr.open_dataset(obs_path)
 
 
-obs_mean_tos = obs_dataset['SST'].mean('time')
+obs_mean_sst = obs_dataset['sst'].mean('time')
 
 # Plot the observational data:
-title_string = "Observations: mean {tos_var}".format(**os.environ)
-plot_and_save_figure("obs", title_string, obs_mean_tos)
+title_string = "Observations: mean {SST_var}".format(**os.environ)
+plot_and_save_figure("obs", title_string, sst_var_name, obs_mean_sst)
 
 
 ### 6) Cleaning up: ############################################################

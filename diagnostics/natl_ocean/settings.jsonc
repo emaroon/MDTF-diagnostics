@@ -7,7 +7,7 @@
 //
 {
   "settings" : {
-    "driver" : "moc_dummy.py",
+    "driver" : "natl_ocean.py",
     "long_name" : "Subtropical to Subpolar North Atlantic Ocean Diagnostics",
     "realm" : "ocean",
     "description" : "Subtropical to Subpolar North Atlantic Ocean Diagnostics",
@@ -80,7 +80,7 @@
        "dimensions": ["time", "TLAT", "TLONG"]
        },
        "TAREA": {
-       "standard_name" : "cell area",
+       "standard_name" : "area of T cells",
        "units": "centimeters^2",
        "dimensions": ["TLAT", "TLONG"]
        }

@@ -201,7 +201,7 @@
       "ndim": 2
     },
     "TAREA": {
-      "standard_name": "cell area",
+      "standard_name": "area of T cells",
       "modifier": "ocean_realm",
       "units": "centimeters^2",
       "ndim": 2

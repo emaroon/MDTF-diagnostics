@@ -16,17 +16,20 @@
     // uncomment the second to run NOAA-GFDL-AM4 only for the MJO_prop_amp POD,
     // and likewise for the SM_ET_coupling POD.
     {
-      "CASENAME" : "QBOi.EXP1.AMIP.001",
+    //  "CASENAME" : "QBOi.EXP1.AMIP.001",
+    //  "CASENAME" : "DUMMY",
+      "CASENAME" : "b.e21.BHIST.f09_g17.CMIP6-historical.001",
       "model" : "CESM",
       "convention" : "CESM",
-      "FIRSTYR" : 1977,
-      "LASTYR" : 1981,
+      "FIRSTYR" : 1850,
+      "LASTYR" : 1851,
       "pod_list": [
           // Optional: PODs to run for this model only (defaults to all)
-          "Wheeler_Kiladis",
-          "EOF_500hPa",
-          "MJO_suite",
-          "MJO_teleconnection"
+          "natl_ocean"
+          //"Wheeler_Kiladis",
+          //"EOF_500hPa",
+          //"MJO_suite",
+          //"MJO_teleconnection"
           // "convective_transition_diag",
           // "precip_diurnal_cycle",
           // "ocn_surf_flux_diag",
@@ -75,22 +78,24 @@
   "MODEL_DATA_ROOT": "../inputdata/model/",
 
   // Working directory. Defaults to OUTPUT_DIR if blank.
-  "WORKING_DIR": "../wkdir",
+  //"WORKING_DIR": "../wkdir",
+  "WORKING_DIR": "/glade/scratch/emaroon/MDTFwkdir",
 
   // Directory to write output. The results of each run of the framework will be
   // put in a subdirectory of this directory.
-  "OUTPUT_DIR": "../wkdir",
+//  "OUTPUT_DIR": "../wkdir",
+  "OUTPUT_DIR": "/glade/scratch/emaroon/MDTFwkdir",
 
   // Location of the Anaconda/miniconda installation to use for managing
   // dependencies (path returned by running `conda info --base`.) If empty,
   // framework will attempt to determine location of system's conda installation.
-  "conda_root": "",
+  "conda_root": "/glade/u/home/emaroon/miniconda3",
 
   // Directory containing the framework-specific conda environments. This should
   // be equal to the "--env_dir" flag passed to conda_env_setup.sh. If left
   // blank, the framework will look for its environments in the system default
   // location.
-  "conda_env_root": "",
+  "conda_env_root": "/glade/u/home/emaroon/miniconda3/envs",
 
   // SETTINGS ------------------------------------------------------------------
   // Any command-line option recognized by the mdtf script (type `mdtf --help`)
