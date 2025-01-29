@@ -133,7 +133,7 @@ if __name__ == '__main__':
 
     # full path to the runtime configuration file
     # config_file = "[path to configuration file]/runtime_config.jsons"
-    config_file = "/Users/jess/mdtf/MDTF-diagnostics/templates/runtime_config.jsonc"
+    config_file = "/home/work/emaroon/mdtf/MDTF-diagnostics/templates/runtime_config.jsonc"
 
     # read the contents of the configuration file into a NameSpace (basically a dict with dot notation)
     with io.open(config_file, 'r', encoding='utf-8') as file_:
