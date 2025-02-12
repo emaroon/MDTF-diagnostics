@@ -106,18 +106,6 @@
       "vocabulary": ""
     },
     {
-      "column_name": "standard_name",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "long_name",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "units",
-      "vocabulary": ""
-    },
-    {
       "column_name": "vertical_levels",
       "vocabulary": ""
     },
@@ -173,9 +161,9 @@
       }
     ]
   },
-  "id": "esm_catalog_CMIP_synthetic_r1i1p1f1_gr1.csv",
+  "id": "esm_catalog_CESM_historical_001",
   "description": null,
   "title": null,
-  "last_updated": "2023-06-01",
-  "catalog_file": "/home1/emaroon/mdtf/MDTF-diagnostics/diagnostics/example_multicase/esm_catalog_CMIP_synthetic_r1i1p1f1_gr1.csv"
+  "last_updated": "2025-02-11T19:50:14Z",
+  "catalog_file": "file:///home1/emaroon/mdtf/MDTF-diagnostics/diagnostics/natl_ocean/esm_catalog_CESM_historical_001.csv"
 }

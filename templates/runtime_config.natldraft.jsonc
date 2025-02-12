@@ -24,26 +24,18 @@
   // Add other PODs that work on ensemble datasets to the pod_list as needed
   "pod_list" : [
       //"example"
-     "example_multicase"
+     "natl_ocean"
    ],
    // Each case corresponds to a different simulation/output dataset
    // startdate, enddate: either YYYY-MM-DD, YYYYMMDD:HHMMSS, or YYYY-MM-DD:HHMMSS
    "case_list":
     {
-      "CMIP_Synthetic_r1i1p1f1_gr1_19800101-19841231":
+      "b.e21.BHIST.f09_g17.CMIP6-historical.001":
         {
-          "model": "test",
-          "convention": "CMIP",
-          "startdate": "19800101120000",
-          "enddate": "19841231000000"
-        }
-      ,
-      "CMIP_Synthetic_r1i1p1f1_gr1_19850101-19891231":
-        {
-          "model": "test",
-          "convention": "CMIP",
-          "startdate": "19850101",
-          "enddate": "19891231"
+          "model": "CESM",
+          "convention": "GFDL",
+          "startdate": "1980-01-01",
+          "enddate": "1984-12-31"
         }
     },
   // PATHS ---------------------------------------------------------------------
@@ -53,7 +45,8 @@
   // "$" and will be expended to their current values when the framework runs.
   // Full or relative path to model data ESM-intake catalog header file
 
-  "DATA_CATALOG": "./diagnostics/example_multicase/esm_catalog_CMIP_synthetic_r1i1p1f1_gr1.json",
+//  "DATA_CATALOG": "./diagnostics/example_multicase/esm_catalog_CMIP_synthetic_r1i1p1f1_gr1.json",
+   "DATA_CATALOG": "/diagnostics/natl_ocean/esm_catalog_CESM_historical_001.json",
 
   // Parent directory containing observational data used by individual PODs.
   "OBS_DATA_ROOT": "/adhara_a/emaroon/mdtf/inputdata/obs_data",
