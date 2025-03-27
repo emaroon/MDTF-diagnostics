@@ -3,135 +3,97 @@
   "attributes": [
     {
       "column_name": "activity_id",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "branch_method",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "branch_time_in_child",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "branch_time_in_parent",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "experiment",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "experiment_id",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "frequency",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "grid",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "grid_label",
-      "vocabulary": ""
+      "vocabulary": "",
+      "required": false
     },
     {
       "column_name": "institution_id",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "nominal_resolution",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "parent_activity_id",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "parent_experiment_id",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "parent_source_id",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "parent_time_units",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "parent_variant_label",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "product",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "realm",
-      "vocabulary": ""
+      "vocabulary": "",
+      "required": false
     },
     {
       "column_name": "source_id",
-      "vocabulary": ""
+      "vocabulary": "",
+      "required": false
     },
     {
-      "column_name": "source_type",
-      "vocabulary": ""
+      "column_name": "experiment_id",
+      "vocabulary": "",
+      "required": true
     },
     {
-      "column_name": "sub_experiment",
-      "vocabulary": ""
+      "column_name": "frequency",
+      "vocabulary": "https://raw.githubusercontent.com/NOAA-GFDL/CMIP6_CVs/master/CMIP6_frequency.json",
+      "required": true
     },
     {
-      "column_name": "sub_experiment_id",
-      "vocabulary": ""
+      "column_name": "realm",
+      "vocabulary": "",
+      "required": true
     },
     {
       "column_name": "table_id",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "variable_id",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "variant_label",
-      "vocabulary": ""
+      "vocabulary": "",
+      "required": false
     },
     {
       "column_name": "member_id",
-      "vocabulary": ""
+      "vocabulary": "",
+      "required": false
     },
     {
-      "column_name": "vertical_levels",
-      "vocabulary": ""
+      "column_name": "grid_label",
+      "vocabulary": "",
+      "required": false
     },
     {
-      "column_name": "init_year",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "start_time",
-      "vocabulary": ""
-    },
-    {
-      "column_name": "end_time",
-      "vocabulary": ""
+      "column_name": "variable_id",
+      "vocabulary": "",
+      "required": true
     },
     {
       "column_name": "time_range",
-      "vocabulary": ""
+      "vocabulary": "",
+      "required": true
+    },
+    {
+      "column_name": "chunk_freq",
+      "required": false
+    },
+    {
+      "column_name": "platform",
+      "vocabulary": "",
+      "required": false
+    },
+    {
+      "column_name": "target",
+      "vocabulary": "",
+      "required": false
+    },
+    {
+      "column_name": "cell_methods",
+      "vocabulary": "",
+      "required": "enhanced"
     },
     {
       "column_name": "path",
-      "vocabulary": ""
+      "vocabulary": "",
+      "required": true
     },
     {
-      "column_name": "version",
-      "vocabulary": ""
+      "column_name": "dimensions",
+      "vocabulary": "",
+      "required": "enhanced"
+    },
+    {
+      "column_name": "version_id",
+      "vocabulary": "",
+      "required": false
+    },
+    {
+      "column_name": "standard_name",
+      "vocabulary": "",
+      "required": "enhanced"
     }
   ],
   "assets": {
@@ -142,28 +104,35 @@
   "aggregation_control": {
     "variable_column_name": "variable_id",
     "groupby_attrs": [
-      "activity_id",
-      "institution_id",
       "source_id",
       "experiment_id",
       "frequency",
-      "member_id",
       "table_id",
       "grid_label",
       "realm",
-      "variant_label"
+      "member_id",
+      "chunk_freq"
     ],
     "aggregations": [
       {
         "type": "union",
         "attribute_name": "variable_id",
         "options": {}
+      },
+      {
+        "type": "join_existing",
+        "attribute_name": "time_range",
+        "options": {
+          "dim": "time",
+          "coords": "minimal",
+          "compat": "override"
+        }
       }
     ]
   },
-  "id": "esm_catalog_CESM_historical_001",
+  "id": "esm_catalog_ESM4",
   "description": null,
   "title": null,
-  "last_updated": "2025-02-11T19:50:14Z",
-  "catalog_file": "file:///home1/emaroon/mdtf/MDTF-diagnostics/diagnostics/natl_ocean/esm_catalog_CESM_historical_001.csv"
+  "last_updated": "2023-05-07T16:35:52Z",
+  "catalog_file": "/home1/emaroon/mdtf/MDTF-diagnostics/diagnostics/natl_ocean/esm_catalog_CESM_historical_001.csv"
 }

@@ -83,16 +83,25 @@ sst_dict = sst_subset.to_dataset_dict(
 
 
 ################## PART 1: NORTH ATLANTIC BIAS ASSESSMENT #######################
-#LOAD IN T/S OBS 
+#LOAD IN T/S OBS AND OMIP DATASET 
+obsdir = os.environ["obsdir"]
+
+ds_en4 = xr.open_dataset(obsdir+'en4.nc')
 
 #CALCULATIONS
 
 #PLOTS 
 #POSTAGE STAMPS OF T AND S DIAGRAM
-#TAYLOR DIAGRAM
+#TAYLOR DIAGRAM?
+#OTHER PLOT?
 
+#SAVE FIGS -> HTML
 
 ################## PART 2: AMOC IN SIGMA COORDS #############
+#LOAD IN OMIP AMOC(SIGMA)
+
+ds_omip_amoc = xr.open_dataset(obsdir+'amoc.nc')
+
 
 #CALCULATIONS
 #CALLING MOC FUNCTIONS FROM PY SCRIPT
@@ -102,15 +111,21 @@ sst_dict = sst_subset.to_dataset_dict(
 #AMOC IN Z (If TIME)
 #AMOC at 45 Line Plot
 
+#SAVE FIGS -> HTML
 
+#################  PART 3: SURFACE-FORCED WATER MASS TRANSFORMATION ##########
+#LOAD IN WMT BENCHMARKS
 
-########## PART 3: SURFACE-FORCED WATER MASS TRANSFORMATION ##########
 
 #CALCULATIONS
 
 #PLOTS
-#WMT BY 
+#WMT BY REGION
+#WMT(45N+) WITH AMOC(SIGMA)
 
+#SAVE FIGS -> HTML
+
+################# PART 4: SYNTHESIS #########################################
 
 
 

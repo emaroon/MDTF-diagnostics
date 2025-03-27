@@ -3,17 +3,17 @@
   "settings" : {
     "description" : "North Atlantic Ocean diagnostics",
     "driver" : "natl_driver.py",
-    "long_name" : "North Atlantic diagnostic for multiple cases",
-    "convention": "CESM",
+    "long_name" : "North Atlantic diagnostic in Subtropical to Subpolar latitudes",
+    "convention": "cesm",
     "runtime_requirements": {
-        "python": ["matplotlib", "xarray"]
+        "python3": ["matplotlib", "xarray"]
     }
   },
 
-  "data" : {
-    "frequency": "month",
-    "realm": "ocean"
-  },
+//  "data" : {
+//    "frequency": "month",
+//    "realm": "ocean"
+//  },
 
 // Variable Coordinates
   "dimensions": {
@@ -32,7 +32,7 @@
 
 // Variables
   "varlist" : {
-    "sst": {
+    "SST": {
       "frequency" : "month",
       "realm": "ocean",
       "dimensions": ["time", "lat", "lon"],

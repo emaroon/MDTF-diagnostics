@@ -33,7 +33,7 @@
       "b.e21.BHIST.f09_g17.CMIP6-historical.001":
         {
           "model": "CESM",
-          "convention": "GFDL",
+          "convention": "CESM",
           "startdate": "1980-01-01",
           "enddate": "1984-12-31"
         }
@@ -46,7 +46,7 @@
   // Full or relative path to model data ESM-intake catalog header file
 
 //  "DATA_CATALOG": "./diagnostics/example_multicase/esm_catalog_CMIP_synthetic_r1i1p1f1_gr1.json",
-   "DATA_CATALOG": "/diagnostics/natl_ocean/esm_catalog_CESM_historical_001.json",
+   "DATA_CATALOG": "./diagnostics/natl_ocean/esm_catalog_CESM_historical_001.json",
 
   // Parent directory containing observational data used by individual PODs.
   "OBS_DATA_ROOT": "/adhara_a/emaroon/mdtf/inputdata/obs_data",
