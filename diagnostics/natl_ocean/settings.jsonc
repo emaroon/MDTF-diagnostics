@@ -4,7 +4,7 @@
     "description" : "North Atlantic Ocean diagnostics",
     "driver" : "natl_driver.py",
     "long_name" : "North Atlantic diagnostic in Subtropical to Subpolar latitudes",
-    "convention": "cesm",
+    "convention": "CESM",
     "runtime_requirements": {
         "python3": ["matplotlib", "xarray"]
     }
