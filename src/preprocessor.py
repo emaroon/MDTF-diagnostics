@@ -1025,7 +1025,6 @@ class MDTFPreprocessorBase(metaclass=util.MDTFABCMeta):
                         ds_st < date_range.end.lower and ds_et >= date_range.start.lower or \
                         ds_st <= date_range.end.lower < ds_et:
                     return_df.append(cat_row)
-
             return pd.DataFrame.from_dict(return_df)
         except ValueError:
             log.error("Non-contiguous or malformed date range in files:", group_df["path"].values)
