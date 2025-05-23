@@ -192,7 +192,7 @@ class PrecipRateToFluxFunction(PreprocessorFunctionBase):
                 standard_name=self._flux_d[std_name],
                 units=units.to_cfunits(v.units) / self._liquid_water_density
             )
-
+   
         translate = translation.VariableTranslator()
         to_convention = None
         for key, val in kwargs.items():
@@ -759,7 +759,6 @@ class MDTFPreprocessorBase(metaclass=util.MDTFABCMeta):
         <https://unidata.github.io/cftime/api.html#cftime.datetime>`__
         objects so that they can be compared with the model data's time axis.
         """
-
         dt_range = var.T.range
         ds_decode = xr.decode_cf(ds, use_cftime=True)
         t_coord = ds_decode[var.T.name]
@@ -1024,6 +1023,7 @@ class MDTFPreprocessorBase(metaclass=util.MDTFABCMeta):
                         ds_st < date_range.end.lower and ds_et >= date_range.start.lower or \
                         ds_st <= date_range.end.lower < ds_et:
                     return_df.append(cat_row)
+
             return pd.DataFrame.from_dict(return_df)
         except ValueError:
             log.error("Non-contiguous or malformed date range in files:", group_df["path"].values)
@@ -1287,7 +1287,6 @@ class MDTFPreprocessorBase(metaclass=util.MDTFABCMeta):
                             new_standard_name = case_query_standard_name
                         var_xr[vname].attrs['standard_name'] = new_standard_name
                         var_xr[vname].attrs['name'] = vname
-
                 var.log.info(f'Merging {var.name}')
                 if case_name not in cat_dict:
                     cat_dict[case_name] = var_xr

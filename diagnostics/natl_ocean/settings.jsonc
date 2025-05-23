@@ -27,6 +27,12 @@
              "units": "degrees_east",
              "axis": "X"
            },
+    "z_t": {
+             "standard_name": "depth",
+             "units": "centimeters",
+             "axis": "Z",
+             "positive": "down"
+            },
     "time": {"standard_name": "time"}
   },
 
@@ -38,7 +44,57 @@
       "dimensions": ["time", "lat", "lon"],
       "standard_name" : "sea_surface_temperature",
       "units": "degC"
+    },
+    "SFWF": {
+      "frequency" : "month",
+      "realm": "ocean",
+      "dimensions": ["time", "lat", "lon"],
+      "standard_name" : "water_flux_into_sea_water",
+//      "standard_name": "Virtual_Salt_Flux_in_FW_Flux_formulation",
+      "units": "kg m-2 s-1"
+    },
+    "SHF": {
+      "frequency" : "month",
+      "realm": "ocean",
+      "dimensions": ["time", "lat", "lon"],
+      "standard_name" : "surface_downward_heat_flux_in_sea_water",
+      "units": "W m-2"
+    },
+    "SALT": {
+      "frequency" : "month",
+      "realm": "ocean",
+      "dimensions": ["time", "z_t", "lat", "lon"],
+      "standard_name" : "sea_water_salinity",
+      "units": "psu"
+    },
+    "TEMP": {
+      "frequency" : "month",
+      "realm": "ocean",
+      "dimensions": ["time", "z_t", "lat", "lon"],
+      "standard_name" : "sea_water_potential_temperature",
+      "units": "degC"
+    },
+    "UVEL": {
+      "frequency" : "month",
+      "realm": "ocean",
+      "dimensions": ["time", "z_t", "lat", "lon"],
+      "standard_name" : "sea_water_x_velocity",
+      "units": "cm s-1"
+    },
+    "VVEL": {
+      "frequency" : "month",
+      "realm": "ocean",
+      "dimensions": ["time", "z_t", "lat", "lon"],
+      "standard_name" : "sea_water_y_velocity",
+      "units": "cm s-1"
+    },
+    "TAREA": {
+      "realm": "ocean",
+      "dimensions": ["lat", "lon"],
+      "standard_name" : "cell_area",
+      "units": "cm2"
     }
+
   }
 }
 

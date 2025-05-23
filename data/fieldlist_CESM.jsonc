@@ -40,7 +40,7 @@
       "axis": "Z"
     },
     "z_t": {
-      "standard_name": "depth_from_surface_to_midpoint_of_layer",
+      "standard_name": "depth",
       "units": "centimeters",
       "positive": "down",
       "axis": "Z"
@@ -363,12 +363,12 @@
       "units": "N m-2",
       "ndim": 3
     },
-    "areacello": {
-      "standard_name": "cell_area",
-      "realm": "ocean",
-      "units": "m2",
-      "ndim": 2
-    },
+    //"areacello": {
+    //  "standard_name": "cell_area",
+    //  "realm": "ocean",
+    //  "units": "m2",
+    //  "ndim": 2
+    //},
     // Variables for AMOC_3D_Structure module:
     // "uo": {
     //   "standard_name": "sea_water_x_velocity",
@@ -390,19 +390,63 @@
     //   "standard_name": "ocean_mass_y_transport",
     //   "units": "kg s-1"
     // },
-    "THETAL": {
-      "standard_name": "sea_water_potential_temperature",
-      "realm": "ocean",
-      "units": "K",
-      "ndim": 4
-    },
+    //"THETAL": {
+    //  "standard_name": "sea_water_potential_temperature",
+    //  "realm": "ocean",
+    //  "units": "K",
+    //  "ndim": 4
+    //},
     "SST": {
       "standard_name": "sea_surface_temperature",
       "realm": "ocean",
       "units": "degC",
       "ndim": 4
+     },
+
+    "SHF": {
+      "standard_name": "surface_downward_heat_flux_in_sea_water",
+      "realm": "ocean",
+      "units": "W m-2",
+      "ndim": 3
     },
-    // Variables for Convective Transition Diagnostics module:
+    "SFWF": {
+      "standard_name": "water_flux_into_sea_water",
+      "realm": "ocean",
+      "units": "kg m-2 s-1",
+      "ndim": 3
+    },
+    "TEMP": {
+      "standard_name": "sea_water_potential_temperature",
+      "realm": "ocean",
+      "units": "degC",
+      "ndim": 4
+    },
+    "SALT": {
+      "standard_name": "sea_water_salinity",
+      "realm": "ocean",
+      "units": "psu",
+      "ndim": 4
+    },
+    "UVEL": {
+      "standard_name": "sea_water_x_velocity",
+      "realm": "ocean",
+      "units": "cm s-1",
+      "ndim": 4
+    },
+    "VVEL": {
+      "standard_name": "sea_water_y_velocity",
+      "realm": "ocean",
+      "units": "cm s-1",
+      "ndim": 4
+    },
+   "TAREA": {
+      "standard_name": "cell_area",
+      "realm": "ocean",
+      "units": "cm2",
+      "ndim": 2
+    },
+
+   // Variables for Convective Transition Diagnostics module:
     // ta: 3D temperature, units = K:
     "T": {
       "standard_name": "air_temperature",

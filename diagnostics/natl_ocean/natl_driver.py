@@ -47,6 +47,8 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import os
 import yaml
+import intake
+import numpy as np
 
 #### LOAD IN MODEL VARIABLES NEEDED FOR ALL PARTS  ####
 print("I MADE IT!")
@@ -62,7 +64,21 @@ with open(case_env_file, 'r') as stream:
 cat_def_file = case_info['CATALOG_FILE']
 case_list = case_info['CASE_LIST']
 # all cases share variable names and dimension coords in this example, so just get first result for each
-sst_var = [case['sst_var'] for case in case_list.values()][0]
+print(case_list)
+
+sst_var = [case['SST_var'] for case in case_list.values()][0]
+temp_var = [case['TEMP_var'] for case in case_list.values()][0]
+uvel_var = [case['UVEL_var'] for case in case_list.values()][0]
+vvel_var = [case['VVEL_var'] for case in case_list.values()][0]
+shf_var = [case['SHF_var'] for case in case_list.values()][0]
+wfo_var = [case['SFWF_var'] for case in case_list.values()][0]
+tarea_var = [case['TAREA_var'] for case in case_list.values()][0]
+
+
+time_coord = [case['time_coord'] for case in case_list.values()][0]
+#lon_coord = [case['lon_coord'] for case in case_list.values()][0]
+#lat_coord = [case['lat_coord'] for case in case_list.values()][0]
+z_t_coord = [case['z_t_coord'] for case in case_list.values()][0] 
 
 cat_def_file = case_info['CATALOG_FILE']
 print(cat_def_file)
@@ -75,18 +91,39 @@ sst_dict = sst_subset.to_dataset_dict(
     xarray_open_kwargs={"decode_times": True, "use_cftime": True}
 )
 
-#input_path = os.environ["SST_FILE"]
-#print('SST_FILE is:', input_path)
+
+input_path = os.environ["SST_FILE"]
+print('SST_FILE is:', input_path)
 
 # command to load the netcdf file
-#model_dataset = xr.open_dataset(input_path)
+model_sst_dataset = xr.open_dataset(input_path)
+print(model_sst_dataset)
 
+time = model_sst_dataset[time_coord]
+#lat = model_sst_dataset[lat_coord]
+#lon = model_sst_dataset[lon_coord]
+
+sst_tmean = model_sst_dataset[sst_var].isel({z_t_coord:0}).mean(time_coord)
+
+WORK_DIR = os.environ['WORK_DIR']
+outmod_dir = os.path.join(WORK_DIR, "model")
+outobs_dir = os.path.join(WORK_DIR, "obs")
+
+plt.pcolormesh(sst_tmean)
+plt.colorbar()
+plt.savefig(outmod_dir+'/example_model_plot.png')
 
 ################## PART 1: NORTH ATLANTIC BIAS ASSESSMENT #######################
 #LOAD IN T/S OBS AND OMIP DATASET 
-obsdir = os.environ["obsdir"]
+obsdir = os.environ["OBS_DATA"]
 
-ds_en4 = xr.open_dataset(obsdir+'en4.nc')
+f=plt.figure()
+plt.pcolormesh(sst_tmean)
+plt.colorbar()
+plt.savefig(outobs_dir+'/example_obs_plot.png')
+
+
+#ds_en4 = xr.open_dataset(obsdir+'en4.nc')
 
 #CALCULATIONS
 
@@ -100,7 +137,7 @@ ds_en4 = xr.open_dataset(obsdir+'en4.nc')
 ################## PART 2: AMOC IN SIGMA COORDS #############
 #LOAD IN OMIP AMOC(SIGMA)
 
-ds_omip_amoc = xr.open_dataset(obsdir+'amoc.nc')
+#ds_omip_amoc = xr.open_dataset(obsdir+'amoc.nc')
 
 
 #CALCULATIONS
