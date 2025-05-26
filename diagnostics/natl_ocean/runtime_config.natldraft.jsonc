@@ -30,10 +30,10 @@
    // startdate, enddate: either YYYY-MM-DD, YYYYMMDD:HHMMSS, or YYYY-MM-DD:HHMMSS
    "case_list":
     {
-      "b.e21.BHIST.f09_g17.CMIP6-historical.001":
+      "CESM2_historical_r1i1p1f1":
         {
           "model": "CESM",
-          "convention": "CESM",
+          "convention": "CMIP",
           "startdate": "1980-01-01",
           "enddate": "1984-12-31"
         }
@@ -46,26 +46,27 @@
   // Full or relative path to model data ESM-intake catalog header file
 
 //  "DATA_CATALOG": "./diagnostics/example_multicase/esm_catalog_CMIP_synthetic_r1i1p1f1_gr1.json",
-   "DATA_CATALOG": "./diagnostics/natl_ocean/esm_catalog_CESM_historical_001_v2.json",
+//   "DATA_CATALOG": "./diagnostics/natl_ocean/esm_catalog_CESM_historical_001_v2.json",
+   "DATA_CATALOG": "./diagnostics/natl_ocean/CMIP_CESM_historical_001.json",
 
   // Parent directory containing observational data used by individual PODs.
-  "OBS_DATA_ROOT": "/adhara_a/emaroon/mdtf/inputdata/obs_data",
+  "OBS_DATA_ROOT": "/glade/work/emaroon/mdtf/inputdata/obs_data",
 
   // Working directory.
-  "WORK_DIR": "/adhara_a/emaroon/mdtf/wkdir",
+  "WORK_DIR": "/glade/work/emaroon/mdtf/wkdir",
 
   // Directory to write output. The results of each run of the framework will be
   // put in a subdirectory of this directory. Defaults to WORKING_DIR if blank.
-  "OUTPUT_DIR": "/adhara_a/emaroon/mdtf/wkdir",
+  "OUTPUT_DIR": "/glade/work/emaroon/mdtf/wkdir",
 
   // Location of the Anaconda/miniconda or micromamba installation to use for managing
   // dependencies (path returned by running `conda info --base` or `micromamba info`.)
-  "conda_root": "/home1/emaroon/miniconda3/",
+  "conda_root": "/glade/work/emaroon/mdtf/conda_links",
 
   // Directory containing the framework-specific conda environments. This should
   // be equal to the "--env_dir" flag passed to conda_env_setup.sh. If left
   // blank, the framework will look for its environments in conda_root/envs
-  "conda_env_root": "/home1/emaroon/miniconda3/envs/",
+  "conda_env_root": "/glade/work/emaroon/mdtf/conda_links/envs",
 
   // Location of the micromamba executable. Required if using micromamba
   "micromamba_exe": "",

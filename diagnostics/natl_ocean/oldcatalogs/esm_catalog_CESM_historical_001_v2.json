@@ -134,5 +134,5 @@
   "description": null,
   "title": null,
   "last_updated": "2023-05-07T16:35:52Z",
-  "catalog_file": "/home1/emaroon/mdtf/MDTF-diagnostics/diagnostics/natl_ocean/esm_catalog_CESM_historical_001_v2.csv"
+  "catalog_file": "/glade/work/emaroon/mdtf/MDTF-diagnostics/diagnostics/natl_ocean/esm_catalog_CESM_historical_001_v2.csv"
 }
