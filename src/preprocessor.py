@@ -1138,7 +1138,6 @@ class MDTFPreprocessorBase(metaclass=util.MDTFABCMeta):
         for case_name, case_d in case_dict.items():
             # path_regex = re.compile(r'(?i)(?<!\\S){}(?!\\S+)'.format(case_name))
             path_regex = [re.compile(r'({})'.format(case_name))]
-
             for var in case_d.varlist.iter_vars():
                 if not var.is_static:
                     date_range = var.T.range

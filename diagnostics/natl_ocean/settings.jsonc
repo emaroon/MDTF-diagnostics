@@ -54,23 +54,22 @@
  //     "units": "kg m-2 s-1",
 //      "requirement": "optional"
 //    },
-    "vsf": {
-      "frequency" : "month",
-      "realm": "ocean",
-      "dimensions": ["time", "lat", "lon"],
-      "standard_name" : "virtual_salt_flux_into_sea_water",
-//      "standard_name": "Virtual_Salt_Flux_in_FW_Flux_formulation",
-      "units": "kg m-2 s-1"
-   //   "requirement": "optional"
-    },
-
-    "hfds": {
-      "frequency" : "month",
-      "realm": "ocean",
-      "dimensions": ["time", "lat", "lon"],
-      "standard_name" : "surface_downward_heat_flux_in_sea_water",
-      "units": "W m-2"
-    },
+//    "vsf": {
+//      "frequency" : "month",
+//      "realm": "ocean",
+//      "dimensions": ["time", "lat", "lon"],
+//      "standard_name" : "virtual_salt_flux_into_sea_water",
+//  //    "standard_name": "Virtual_Salt_Flux_in_FW_Flux_formulation",
+  //    "units": "kg m-2 s-1"
+//   //   "requirement": "optional"
+//    },
+//    "hfds": {
+//      "frequency" : "month",
+//      "realm": "ocean",
+//      "dimensions": ["time", "lat", "lon"],
+//      "standard_name" : "surface_downward_heat_flux_in_sea_water",
+//      "units": "W m-2"
+//    },
     "so": {
       "frequency" : "month",
       "realm": "ocean",
