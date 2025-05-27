@@ -27,7 +27,7 @@
              "units": "degrees_east",
              "axis": "X"
            },
-    "deptho": {
+    "lev": {
              "standard_name": "depth",
              "units": "centimeters",
              "axis": "Z",
@@ -54,55 +54,55 @@
  //     "units": "kg m-2 s-1",
 //      "requirement": "optional"
 //    },
-//    "vsf": {
-//      "frequency" : "month",
-//      "realm": "ocean",
-//      "dimensions": ["time", "lat", "lon"],
-//      "standard_name" : "virtual_salt_flux_into_sea_water",
-//  //    "standard_name": "Virtual_Salt_Flux_in_FW_Flux_formulation",
-  //    "units": "kg m-2 s-1"
-//   //   "requirement": "optional"
-//    },
-//    "hfds": {
-//      "frequency" : "month",
-//      "realm": "ocean",
-//      "dimensions": ["time", "lat", "lon"],
-//      "standard_name" : "surface_downward_heat_flux_in_sea_water",
-//      "units": "W m-2"
-//    },
+    "vsf": {
+      "frequency" : "month",
+      "realm": "ocean",
+      "dimensions": ["time", "lat", "lon"],
+      "standard_name" : "virtual_salt_flux_into_sea_water",
+  //    "standard_name": "Virtual_Salt_Flux_in_FW_Flux_formulation",
+      "units": "kg m-2 s-1"
+   //   "requirement": "optional"
+    },
+    "hfds": {
+      "frequency" : "month",
+      "realm": "ocean",
+      "dimensions": ["time", "lat", "lon"],
+      "standard_name" : "surface_downward_heat_flux_in_sea_water",
+      "units": "W m-2"
+    },
     "so": {
       "frequency" : "month",
       "realm": "ocean",
-      "dimensions": ["time", "deptho", "lat", "lon"],
+      "dimensions": ["time", "lev", "lat", "lon"],
       "standard_name" : "sea_water_salinity",
       "units": "psu"
     },
     "thetao": {
       "frequency" : "month",
       "realm": "ocean",
-      "dimensions": ["time", "deptho", "lat", "lon"],
+      "dimensions": ["time", "lev", "lat", "lon"],
       "standard_name" : "sea_water_potential_temperature",
       "units": "degC"
     },
-    "uo": {
-      "frequency" : "month",
-      "realm": "ocean",
-      "dimensions": ["time", "deptho", "lat", "lon"],
-      "standard_name" : "sea_water_x_velocity",
-      "units": "cm s-1"
-    },
-    "vo": {
-      "frequency" : "month",
-      "realm": "ocean",
-      "dimensions": ["time", "deptho", "lat", "lon"],
-      "standard_name" : "sea_water_y_velocity",
-      "units": "cm s-1"
-    },
+ //   "uo": {
+ //     "frequency" : "month",
+//      "realm": "ocean",
+//      "dimensions": ["time", "lev", "lat", "lon"],
+//      "standard_name" : "sea_water_x_velocity",
+//      "units": "cm s-1"
+//    },
+//    "vo": {
+//      "frequency" : "month",
+//      "realm": "ocean",
+//      "dimensions": ["time", "lev", "lat", "lon"],
+//      "standard_name" : "sea_water_y_velocity",
+//      "units": "cm s-1"
+//    },
     "areacello": {
       "realm": "ocean",
       "dimensions": ["lat", "lon"],
       "standard_name" : "cell_area",
-      "units": "cm2"
+      "units": "m2"
     }
 
   }

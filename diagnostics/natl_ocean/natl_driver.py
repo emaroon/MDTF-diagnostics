@@ -66,62 +66,113 @@ case_list = case_info['CASE_LIST']
 # all cases share variable names and dimension coords in this example, so just get first result for each
 print(case_list)
 
-sst_var = [case['SST_var'] for case in case_list.values()][0]
-temp_var = [case['TEMP_var'] for case in case_list.values()][0]
-uvel_var = [case['UVEL_var'] for case in case_list.values()][0]
-vvel_var = [case['VVEL_var'] for case in case_list.values()][0]
-shf_var = [case['SHF_var'] for case in case_list.values()][0]
-wfo_var = [case['SFWF_var'] for case in case_list.values()][0]
-tarea_var = [case['TAREA_var'] for case in case_list.values()][0]
+temp_var = [case['thetao_var'] for case in case_list.values()][0]
+#uvel_var = [case['UO_var'] for case in case_list.values()][0]
+#vvel_var = [case['VVEL_var'] for case in case_list.values()][0]
+hfds_var = [case['hfds_var'] for case in case_list.values()][0]
+salt_var = [case['so_var'] for case in case_list.values()][0]
 
+for case in case_list.values():
+    if 'vsf_var' in case:
+        vsf_var = [case['vsf_var'] for case in case_list.values()][0]
+        wfo_mod = False
+    elif 'wfo_var' in case:
+        wfo_var = [case['wfo_var'] for case in case_list.values()][0]
+        wfo_mod = True
+    else: 'uhoh'
 
+areacello_var = [case['areacello_var'] for case in case_list.values()][0]
+
+#loading coords; this is currently writtne for multicase mode, but ignoring the other possible cases, 
+#because there's only one
+#change later to work for single case mode?
 time_coord = [case['time_coord'] for case in case_list.values()][0]
-#lon_coord = [case['lon_coord'] for case in case_list.values()][0]
-#lat_coord = [case['lat_coord'] for case in case_list.values()][0]
-z_t_coord = [case['z_t_coord'] for case in case_list.values()][0] 
+lon_coord = [case['lon_coord'] for case in case_list.values()][0]
+lat_coord = [case['lat_coord'] for case in case_list.values()][0]
+lev_coord = [case['lev_coord'] for case in case_list.values()][0] 
 
+
+#method 1 for loading in variables: use the catalog
 cat_def_file = case_info['CATALOG_FILE']
 print(cat_def_file)
 
 cat = intake.open_esm_datastore(cat_def_file)
 
-sst_subset = cat.search(variable_id=sst_var, frequency="month")
+print('This is the catalog', cat)
 
-sst_dict = sst_subset.to_dataset_dict(
+##TEMP
+temp_subset = cat.search(variable_id=temp_var, frequency="month")
+temp_dict = temp_subset.to_dataset_dict(
     xarray_open_kwargs={"decode_times": True, "use_cftime": True}
 )
 
 
-input_path = os.environ["SST_FILE"]
-print('SST_FILE is:', input_path)
+#method 2: load the file directly
+#THETAO
+input_path = os.environ["THETAO_FILE"]
+print('THETAO_FILE is:', input_path)
 
 # command to load the netcdf file
-model_sst_dataset = xr.open_dataset(input_path)
-print(model_sst_dataset)
+model_temp_dataset = xr.open_dataset(input_path)
+print(model_temp_dataset)
 
-time = model_sst_dataset[time_coord]
-#lat = model_sst_dataset[lat_coord]
-#lon = model_sst_dataset[lon_coord]
+#SALT
+input_path = os.environ["SO_FILE"]
+model_salt_dataset = xr.open_dataset(input_path)
 
-sst_tmean = model_sst_dataset[sst_var].isel({z_t_coord:0}).mean(time_coord)
+#SHF
+input_path = os.environ["HFDS_FILE"]
+model_hfds_dataset = xr.open_dataset(input_path)
+
+#TAREA
+input_path = os.environ["AREACELLO_FILE"]
+model_area_dataset = xr.open_dataset(input_path)
+
+
+#taking time mean for figures
+temp_tmean = model_temp_dataset[temp_var].isel({lev_coord:0}).mean(time_coord)
+salt_tmean = model_salt_dataset[salt_var].isel({lev_coord:0}).mean(time_coord)
+hfds_tmean = model_hfds_dataset[hfds_var].mean(time_coord)
+area = model_area_dataset[areacello_var]
+
+
 
 WORK_DIR = os.environ['WORK_DIR']
 outmod_dir = os.path.join(WORK_DIR, "model")
 outobs_dir = os.path.join(WORK_DIR, "obs")
 
-plt.pcolormesh(sst_tmean)
+
+#TEMP fig
+plt.pcolormesh(temp_tmean)
 plt.colorbar()
-plt.savefig(outmod_dir+'/example_model_plot.png')
+plt.savefig(outmod_dir+'/tmean_toplev_plot.png')
+
+#SALT fig
+f=plt.figure()
+plt.pcolormesh(salt_tmean)
+plt.colorbar()
+plt.savefig(outmod_dir+'/smean_toplev_plot.png')
+
+#SHF fig
+f=plt.figure()
+plt.pcolormesh(hfds_tmean)
+plt.colorbar()
+plt.savefig(outmod_dir+'/hfds_plot.png')
+
+#TAREA fig
+f=plt.figure()
+plt.pcolormesh(area)
+plt.colorbar()
+plt.savefig(outmod_dir+'/area_plot.png')
+
+
 
 ################## PART 1: NORTH ATLANTIC BIAS ASSESSMENT #######################
 #LOAD IN T/S OBS AND OMIP DATASET 
 obsdir = os.environ["OBS_DATA"]
 
-f=plt.figure()
-plt.pcolormesh(sst_tmean)
-plt.colorbar()
-plt.savefig(outobs_dir+'/example_obs_plot.png')
 
+print('this is the obsdir', obsdir)
 
 #ds_en4 = xr.open_dataset(obsdir+'en4.nc')
 
