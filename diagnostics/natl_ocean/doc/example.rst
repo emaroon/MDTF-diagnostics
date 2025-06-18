@@ -1,47 +1,21 @@
-.. This is a comment in RestructuredText format (two periods and a space).
+North Atlantic Ocean Diagnostic Documentation
+=============================================
 
-.. Note that all "statements" and "paragraphs" need to be separated by a blank 
-   line. This means the source code can be hard-wrapped to 80 columns for ease 
-   of reading. Multi-line comments or commands like this need to be indented by
-   exactly three spaces.
+Last update: 6/3/2025
 
-.. Underline with '='s to set top-level heading: 
-   https://docutils.sourceforge.io/docs/user/rst/quickref.html#section-structure
+TODO: synopsis of your diagnostic here (like an abstract). 
 
-Example Diagnostic Documentation
-================================
-
-Last update: 5/06/2020
-
-This is an example document that you can use as a template for your diagnostics'
-own documentation: it describes what information you should provide in each 
-section. For example, if this were a real POD, you'd place a one-paragraph 
-synopsis of your diagnostic here (like an abstract). 
-
-It also serves as an example of the RestructuredText (ReST, .rst) format used to 
-generate this page: compare this output with the input `source file 
-<https://raw.githubusercontent.com/NOAA-GFDL/MDTF-diagnostics/develop/diagnostics/example/doc/example.rst>`__. 
-The easiest way to get started is to copy the source file into the online editor 
+TODO: test by copying the source file into the online editor 
 at `https://livesphinx.herokuapp.com/ <https://livesphinx.herokuapp.com/>`__ and 
 experiment.
-
-.. Underline with '-'s to make a second-level heading.
 
 Version & Contact info
 ----------------------
 
-.. '-' starts items in a bulleted list: 
-   https://docutils.sourceforge.io/docs/user/rst/quickref.html#bullet-lists
-
-Here you should describe who contributed to the diagnostic, and who should be
-contacted for further information:
-
-- Version/revision information: version 1 (5/06/2020)
-- PI (name, affiliation, email)
-- Developer/point of contact (name, affiliation, email)
-- Other contributors
-
-.. Underline with '^'s to make a third-level heading.
+- Version/revision information: version 1 (6/3/2025)
+- PIs: Liz Maroon (University of Wisconsin, emaroon@wisc.edu) and Steve Yeager (NSF National Center for Atmospheric Resarch, yeager@ucar.edu)
+- Developer/point of contact: Liz Maroon (University of Wisconsin, emaroon@wisc.edu)
+- Other contributors: Taydra Low, Brendan Myers, Teagan King
 
 Open source copyright agreement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -52,7 +26,7 @@ Unless you've distributed your script elsewhere, you don't need to change this.
 Functionality
 -------------
 
-In this section you should summarize the stages of the calculations your 
+TODO: In this section you should summarize the stages of the calculations your 
 diagnostic performs, and how they translate to the individual source code files 
 provided in your submission. This will, e.g., let maintainers fixing a bug or 
 people with questions about how your code works know where to look.
@@ -60,16 +34,14 @@ people with questions about how your code works know where to look.
 Required programming language and libraries
 -------------------------------------------
 
-In this section you should summarize the programming languages and third-party 
-libraries used by your diagnostic. You also provide this information in the 
-``settings.jsonc`` file, but here you can give helpful comments to human 
-maintainers (eg, "We need at least version 1.5 of this library because we call
-this function.")
+The North Atlantic Ocean Diagnostic recommends python (3.10 or later) because we
+use xarray. Xarray, matplotlib, os, yaml, intake, numpy, xesmf, xskillscore,
+scipy, gsw_xarray, numba, cftime, and cartopy are also required.
 
 Required model output variables
 -------------------------------
 
-In this section you should describe each variable in the input data your 
+TODO: In this section you should describe each variable in the input data your 
 diagnostic uses. You also need to provide this in the ``settings.jsonc`` file, 
 but here you should go into detail on the assumptions your diagnostic makes 
 about the structure of the data.
@@ -77,7 +49,7 @@ about the structure of the data.
 References
 ----------
 
-Here you should cite the journal articles providing the scientific basis for 
+TODO: Here you should cite the journal articles providing the scientific basis for 
 your diagnostic. To keep the documentation format used in version 2.0 of
 the framework, we list references "manually" with the following command:
 
@@ -115,8 +87,8 @@ More about this diagnostic
 --------------------------
 
 In this section, you can go into more detail on the science behind your 
-diagnostic, for example, by copying in relevant text articles you've written 
-using th  It's especially helpful if you're able to teach users how to use 
+diagnostic, for example, by copying in relevant text articles you've written. 
+It's especially helpful if you're able to teach users how to use 
 your diagnostic's output, by showing how to interpret example plots.
 
 Instead of doing that here, we provide more examples of RestructuredText
@@ -126,12 +98,6 @@ As mentioned above, we recommend the online editor at `https://livesphinx.heroku
 <https://livesphinx.herokuapp.com/>`__, which gives immediate feedback and has
 support for sphinx-specific commands.
 
-Here's an 
-`introduction <http://docutils.sourceforge.net/docs/user/rst/quickstart.html>`__ 
-to the RestructuredText format, a 
-`quick reference <http://docutils.sourceforge.net/docs/user/rst/quickref.html>`__, 
-and a `syntax comparison <http://hyperpolyglot.org/lightweight-markup>`__ to 
-other text formats you may be familiar with.
 
 Links to external sites
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -209,52 +175,3 @@ which produces
 
 The tag lets you refer to figures in the text, e.g. 
 ``:ref:`Figure 1 <my-figure-tag>``` → :ref:`Figure 1 <my-figure-tag>`.
-
-Equations
-^^^^^^^^^
-
-Accented and Greek letters can be written directly using Unicode: é, Ω. 
-(Make sure your text editor is saving the file in UTF-8 encoding).
-
-Use the following syntax for superscripts and subscripts in in-line text:
-
-.. code-block:: restructuredtext
-
-   W m\ :sup:`-2`\ ; CO\ :sub:`2`\ .
-
-which produces: W m\ :sup:`-2`\ ; CO\ :sub:`2`\ .
-Note one space is needed after both forward slashes in the input; these spaces 
-are not included in the output.
-
-Equations can be written using standard 
-`latex <https://www.reed.edu/academic_support/pdfs/qskills/latexcheatsheet.pdf>`__ 
-(PDF link) syntax. Short equations in-line with the text can be written as 
-``:math:`f = 2 \Omega \sin \phi``` → :math:`f = 2 \Omega \sin \phi`.
-
-Longer display equations can be written as follows. Note that a blank line is 
-needed after the ``.. math::`` heading and after each equation, with the 
-exception of aligned equations.
-
-.. code-block:: restructuredtext
-
-   .. math::
-
-      \frac{D \mathbf{u}_g}{Dt} + f_0 \hat{\mathbf{k}} \times \mathbf{u}_a &= 0; \\
-      \frac{Dh}{Dt} + f \nabla_z \cdot \mathbf{u}_a &= 0,
-
-      \text{where } \mathbf{u}_g = \frac{g}{f_0} \hat{\mathbf{k}} \times \nabla_z h.
-
-which produces:
-
-.. math::
-
-   \frac{D \mathbf{u}_g}{Dt} + f_0 \hat{\mathbf{k}} \times \mathbf{u}_a &= 0; \\
-   \frac{Dh}{Dt} + f \nabla_z \cdot \mathbf{u}_a &= 0,
-
-   \text{where } \mathbf{u}_g = \frac{g}{f_0} \hat{\mathbf{k}} \times \nabla_z h.
-
-The editor at `https://livesphinx.herokuapp.com/ 
-<https://livesphinx.herokuapp.com/>`__ can have issues formatting complicated 
-equations, so you may want to check its output with a latex-specific editor, 
-such as `overleaf <https://www.overleaf.com/>`__ or other `equation editors 
-<https://www.codecogs.com/latex/eqneditor.php>`__.
