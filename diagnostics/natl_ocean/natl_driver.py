@@ -12,26 +12,59 @@
 #   The MDTF framework is distributed under the LGPLv3 license (see LICENSE.txt). 
 #   Unless you've distirbuted your script elsewhere, you don't need to change this.
 # 
-#   Functionality  # TODO
+#   Functionality
 # 
-#   In this section you should summarize the stages of the calculations your 
-#   diagnostic performs, and how they translate to the individual source code files 
-#   provided in your submission. This will, e.g., let maintainers fixing a bug or 
-#   people with questions about how your code works know where to look.
-# 
+#   1. Preprocessing & Derived Variable Computation:
+#        Prepare the model output and compute derived physical variables using POD_utils.py.
+#        Key Functions:
+#          compute_sigma0(thetao, so): Calculates potential density anomaly (σ₀).
+#          compute_mld(sigma0): Computes Mixed Layer Depth based on a density threshold.
+#          compute_zavg(ds, var): Calculates thickness-weighted mean of a variable over the upper 200 m.
+#          check_depth_units(ds): Ensures depth units are in meters.
+#
+#   2. Regridding:
+#        Interpolate all model and observational fields to a consistent 1×1 lat-lon grid using POD_utils.py.
+#        Key Functions:
+#          regrid(ds, method='bilinear'): Uses xESMF for bilinear regridding, with NaN handling and global domain definition.
+#
+#   3. Time Averaging (Climatology)
+#        Convert the time series into a monthly climatology over 1989–2018 using user-controlled driver script
+#
+#   4. Bias Calculation Against Observations
+#        Compute model bias relative to observations and calculate error statistics using POD_utils.py.
+#        Key Functions:
+#          plot_preproc(...): Extracts spatial and temporal slices, sets up metadata.
+#          error_stats(...): Computes area-weighted RMSE (map region) and mean bias (focus region).
+#
+#   5. Plotting
+#        Generate spatial and statistical visualizations of model performance using POD_utils.py.
+#        Key Functions:
+#          Plot1(...): Produces two-panel maps for each variable (bias + bias rank).
+#            SpatialBias_panel(...): Shows spatial bias and regional stats.
+#            SpatialRank_panel(...): Shows where the target model ranks in bias among OMIP models.
+#          Plot2(...): Scatter plot comparing regional bias statistics between two variables.
+#            Uses Scatter_panel(...) to visualize model-model comparisons.
+#
+#   6. Optional: Multi-Cycle OMIP Time Handling
+#        Detect and restructure repeating OMIP forcing cycles.
+#        Key Functions:
+#          forcing_cycles(expid, nt): Identifies number and span of OMIP cycles.
+#          reorg_by_cycle(ds, nt, ncyc, yearrange): Restructures the dataset to expose cycles on a new dimension.
+#
 #   Required programming language and libraries
 # 
 #   The North Atlantic Ocean Diagnostic recommends python (3.10 or later) because we
 #   use xarray. Xarray, matplotlib, os, yaml, intake, numpy, xesmf, xskillscore,
 #   scipy, gsw_xarray, numba, cftime, and cartopy are also required.
 # 
-#   Required model output variables  # TODO
-# 
-#   In this section you should describe each variable in the input data your 
-#   diagnostic uses. You also need to provide this in the ``settings.jsonc`` file, 
-#   but here you should go into detail on the assumptions your diagnostic makes 
-#   about the structure of the data.
-# 
+#   Required model output variables
+#     thetao    Potential temperature   degrees Celsius  3D: time × depth × lat × lon
+#     so        Salinity                PSU              3D: time × depth × lat × lon
+#     lev       Depth level             m or cm          2D
+#     lev_bnds  Depth level bounds      m or cm          2D: lev × bnds (bnds = 2)
+#     lon, lat  Longitude and latitude  degrees          1D or 2D grid coordinates
+#     time      Time dimension          datetime         1D
+#
 #   References  # TODO
 # 
 #   Here you should cite the journal articles providing the scientific basis for 
@@ -92,13 +125,14 @@ for case in case_list.values():
     elif 'wfo_var' in case:
         wfo_var = [case['wfo_var'] for case in case_list.values()][0]
         wfo_mod = True
-    else: 'uhoh'
+    else:
+        print('vsf_var or wfo_var not found in case')
 
 areacello_var = [case['areacello_var'] for case in case_list.values()][0]
 
 # loading coords; this is currently written for multicase mode, but ignoring the other possible cases, 
 # because there's only one
-# change later to work for single case mode?
+# TODO: change later to work for single case mode?
 time_coord = [case['time_coord'] for case in case_list.values()][0]
 lon_coord = [case['lon_coord'] for case in case_list.values()][0]
 lat_coord = [case['lat_coord'] for case in case_list.values()][0]
@@ -135,12 +169,6 @@ model_hfds_dataset = xr.open_dataset(input_path)
 input_path = os.environ["AREACELLO_FILE"]
 model_area_dataset = xr.open_dataset(input_path)
 
-# # caluclating time mean for figures
-# temp_tmean = model_temp_dataset[temp_var].isel({lev_coord:0}).mean(time_coord)
-# salt_tmean = model_salt_dataset[salt_var].isel({lev_coord:0}).mean(time_coord)
-# hfds_tmean = model_hfds_dataset[hfds_var].mean(time_coord)
-# area = model_area_dataset[areacello_var]
-
 # ---------------------------------------------------------------------
 
 # set directories
@@ -148,47 +176,26 @@ WORK_DIR = os.environ['WORK_DIR']
 outmod_dir = os.path.join(WORK_DIR, "model")
 outobs_dir = os.path.join(WORK_DIR, "obs")
 
-# # TEMP fig
-# plt.pcolormesh(temp_tmean)
-# plt.colorbar()
-# plt.savefig(outmod_dir+'/tmean_toplev_plot.png')
-
-# # SALT fig
-# f=plt.figure()
-# plt.pcolormesh(salt_tmean)
-# plt.colorbar()
-# plt.savefig(outmod_dir+'/smean_toplev_plot.png')
-
-# # SHF fig
-# f=plt.figure()
-# plt.pcolormesh(hfds_tmean)
-# plt.colorbar()
-# plt.savefig(outmod_dir+'/hfds_plot.png')
-
-# # TAREA fig
-# f=plt.figure()
-# plt.pcolormesh(area)
-# plt.colorbar()
-# plt.savefig(outmod_dir+'/area_plot.png')
-
 # PART 1: NORTH ATLANTIC BIAS ASSESSMENT ######################################
 
 print('at part 1')
 ### DATA INGEST FROM NOTEBOOK: # TODO: Probably replace with catalog portion and/or create a new file!
 ds_target = xr.open_dataset('/glade/collections/cmip/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Omon/thetao/gn/v20190308/thetao_Omon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc')
+# ds_target = model_temp_dataset
 ds_salt = xr.open_dataset('/glade/collections/cmip/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Omon/so/gn/v20190308/so_Omon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc')
+# ds_salt = model_salt_dataset
 # ds_target['so'] = model_salt_dataset
 
 ds_target['so'] = ds_salt['so']
 
-## This step may not be needed in MDTF?
+## TODO: This step may not be needed in MDTF?
 ds_target = POD_utils.preprocess_coords(ds_target)
 
 # LOAD IN T/S OBS AND OMIP DATASET --------------------------------------------
 obsdir = os.environ["OBS_DATA"]
-#omip_dir = os.environ["OMIP_DATA"]
+# omip_dir = os.environ["OMIP_DATA"]
 
-# Open OMIP data from notebook  # TODO: this should probably just load omip above!
+# Open OMIP data  # TODO: this should probably just load omip above!
 omip_file = '/glade/work/brendanmy/S_Yeager/Sub2Sub/data_archive/POD_data/omip2.cycle1.1989_2018.mld_sic_t200_s200_sigma200.nc'
 # omip_file = omip_dir+'omip2.cycle1.1989_2018.mld_sic_t200_s200_sigma200.nc'
 ds_model = xr.open_dataset(omip_file).isel(OMIP=0).load()
@@ -196,7 +203,7 @@ ds_model = xr.open_dataset(omip_file).isel(OMIP=0).load()
 # Open Obs # TODO: this should probably just use the obsdir above!
 obs_path = '/glade/campaign/cgd/ccr/yeager/Sub2Sub/POD_data/obs_1x1.nc'
 ds_obs = xr.open_dataset(obs_path).load()
-#ds_obs = xr.open_dataset(obsdir+'obs_1x1.nc').load()
+# ds_obs = xr.open_dataset(obsdir+'obs_1x1.nc').load()
 
 # Time Subselection: Climatology is set to 1989-2018. Select closest match.
 climo_years = [1989, 2018]
