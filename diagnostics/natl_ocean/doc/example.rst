@@ -26,10 +26,42 @@ Unless you've distributed your script elsewhere, you don't need to change this.
 Functionality
 -------------
 
-TODO: In this section you should summarize the stages of the calculations your 
-diagnostic performs, and how they translate to the individual source code files 
-provided in your submission. This will, e.g., let maintainers fixing a bug or 
-people with questions about how your code works know where to look.
+1. Preprocessing & Derived Variable Computation:
+     Prepare the model output and compute derived physical variables using POD_utils.py.
+     Key Functions:
+       compute_sigma0(thetao, so): Calculates potential density anomaly (σ₀).
+       compute_mld(sigma0): Computes Mixed Layer Depth based on a density threshold.
+       compute_zavg(ds, var): Calculates thickness-weighted mean of a variable over the upper 200 m.
+       check_depth_units(ds): Ensures depth units are in meters.
+
+2. Regridding:
+     Interpolate all model and observational fields to a consistent 1×1 lat-lon grid using POD_utils.py.
+     Key Functions:
+       regrid(ds, method='bilinear'): Uses xESMF for bilinear regridding, with NaN handling and global domain definition.
+
+3. Time Averaging (Climatology)
+     Convert the time series into a monthly climatology over 1989–2018 using user-controlled driver script
+
+4. Bias Calculation Against Observations
+     Compute model bias relative to observations and calculate error statistics using POD_utils.py.
+     Key Functions:
+       plot_preproc(...): Extracts spatial and temporal slices, sets up metadata.
+       error_stats(...): Computes area-weighted RMSE (map region) and mean bias (focus region).
+
+5. Plotting
+     Generate spatial and statistical visualizations of model performance using POD_utils.py.
+     Key Functions:
+       Plot1(...): Produces two-panel maps for each variable (bias + bias rank).
+         SpatialBias_panel(...): Shows spatial bias and regional stats.
+         SpatialRank_panel(...): Shows where the target model ranks in bias among OMIP models.
+       Plot2(...): Scatter plot comparing regional bias statistics between two variables.
+         Uses Scatter_panel(...) to visualize model-model comparisons.
+
+6. Optional: Multi-Cycle OMIP Time Handling
+     Detect and restructure repeating OMIP forcing cycles.
+     Key Functions:
+       forcing_cycles(expid, nt): Identifies number and span of OMIP cycles.
+       reorg_by_cycle(ds, nt, ncyc, yearrange): Restructures the dataset to expose cycles on a new dimension.
 
 Required programming language and libraries
 -------------------------------------------
@@ -40,11 +72,12 @@ scipy, gsw_xarray, numba, cftime, and cartopy are also required.
 
 Required model output variables
 -------------------------------
-
-TODO: In this section you should describe each variable in the input data your 
-diagnostic uses. You also need to provide this in the ``settings.jsonc`` file, 
-but here you should go into detail on the assumptions your diagnostic makes 
-about the structure of the data.
+thetao    Potential temperature   degrees Celsius  3D: time × depth × lat × lon
+so        Salinity                PSU              3D: time × depth × lat × lon
+lev       Depth level             m or cm          2D
+lev_bnds  Depth level bounds      m or cm          2D: lev × bnds (bnds = 2)
+lon, lat  Longitude and latitude  degrees          1D or 2D grid coordinates
+time      Time dimension          datetime         1D
 
 References
 ----------
