@@ -8,34 +8,21 @@
 <title>MDTF North Atlantic Ocean Diagnostics</title>
 <img src="../mdtf_diag_banner.png">
 <h3>North Atlantic Bias Assessment</h3>
-<p>
-This diagnostic assesses the performance of a target ocean model simulation relative to observational benchmarks and an ensemble of CMIP6 OMIP simulations. It focuses on four key upper-ocean fields:
+<p>This diagnostic assesses the performance of a target ocean model simulation relative to observational benchmarks and an ensemble of CMIP6 OMIP simulations. It focuses on <strong>four key upper-ocean fields:</strong></p>
+<p>    thetao_zavg: Potential temperature averaged over the upper 200 m</p>
+<p>    so_zavg: Salinity averaged over the upper 200 m</p>
+<p>    sigma0_zavg: Potential density anomaly averaged over the upper 200 m</p>
+<p>    mld: Mixed Layer Depth, calculated based on a sigma0 threshold</p>
+<p>These variables are computed as climatological monthly means over the period 1989–2018, regridded to a common 1°×1° grid using bilinear interpolation via xESMF.</p>
 
-thetao_zavg: Potential temperature averaged over the upper 200 m
-
-so_zavg: Salinity averaged over the upper 200 m
-
-sigma0_zavg: Potential density anomaly averaged over the upper 200 m
-
-mld: Mixed Layer Depth, calculated based on a sigma0 threshold
-
-These variables are computed as climatological monthly means over the period 1989–2018, regridded to a common 1°×1° grid using bilinear interpolation via xESMF.
-
-Key Plots and Interpretation
-Plot1 (Spatial Maps): For each variable, the left panel shows bias (model – observations), while the right panel shows the bias rank, indicating how the target model compares to the distribution of CMIP6 OMIP models.
-
-Colors in bias maps indicate whether the model is warmer/saltier/denser than observations.
-
-Bias ranks are percentile-based; a higher value means the target model has one of the largest absolute biases among peers.
-
-A green box highlights the focus region, where local bias statistics are computed.
-
-Plot2 (Scatter Plot): Relates regional bias statistics between two variables (e.g., temperature vs. salinity) across all models, highlighting the performance of the target model.
-
-The yellow star indicates the target model.
-
-A best-fit line and Pearson correlation coefficient summarize the relationship.
-</p>
+<p><strong>Key Plots and Interpretation</strong></p>
+<p>Plot1 (Spatial Maps): For each variable, the left panel shows bias (model – observations), while the right panel shows the bias rank, indicating how the target model compares to the distribution of CMIP6 OMIP models.</p>
+<p>Colors in bias maps indicate whether the model is warmer/saltier/denser than observations.</p>
+<p>Bias ranks are percentile-based; a higher value means the target model has one of the largest absolute biases among peers.</p>
+<p>A green box highlights the focus region, where local bias statistics are computed.</p>
+<p>Plot2 (Scatter Plot): Relates regional bias statistics between two variables (e.g., temperature vs. salinity) across all models, highlighting the performance of the target model.</p>
+<p>The yellow star indicates the target model.</p>
+<p>A best-fit line and Pearson correlation coefficient summarize the relationship.</p>
 <TABLE>
 <TR>
 <TH align=left><font color=navy>Time averages, {{startdate}}-{{enddate}}
