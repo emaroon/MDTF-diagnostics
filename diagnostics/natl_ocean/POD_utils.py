@@ -3,7 +3,7 @@ import numpy as np
 import xarray as xr
 import xesmf as xe
 from scipy import stats
-#import gsw_xarray as gsw #TODO: Add this to conda env
+import gsw_xarray as gsw
 from numba import guvectorize
 import cftime
 
@@ -88,8 +88,8 @@ def compute_sigma0(da_t,da_s):
             da_s = da_s.assign_attrs({'units':'g/kg'})
         else:
             raise Exception("Check units of so!")
-    #da_sig0 = gsw.density.sigma0(SA=da_s,CT=da_t)
-    return 0 #da_sig0 # TODO: fix once gsw is in conda env
+    da_sig0 = gsw.density.sigma0(SA=da_s,CT=da_t)
+    return da_sig0
 
 
 def compute_mld(da_sig0, dsig=0.03, rdep=10.0):
@@ -501,9 +501,9 @@ def region_str(region):
 def error_stats(da,region,fregion):
     varname = da.name
     ds_out = da.rename(varname+'_bias').to_dataset()
-    regweights = np.cos(np.deg2rad(da.lat)).drop_attrs()
+    regweights = np.cos(np.deg2rad(da.lat)) #.drop_attrs()
     da_freg = da.sel(lat=slice(fregion[2], fregion[3]), lon=slice(fregion[0], fregion[1]))
-    fregweights = np.cos(np.deg2rad(da_freg.lat)).drop_attrs()
+    fregweights = np.cos(np.deg2rad(da_freg.lat)) #.drop_attrs()
     ds_out[varname+'_bias'] = da_freg.weighted(fregweights).mean(['lat', 'lon'], skipna=True, keep_attrs=True)
     ds_out[varname+'_bias'] = ds_out[varname+'_bias'].assign_attrs({'description':'Focus region mean bias',
                                                                    'region':region_str(fregion)})
@@ -569,7 +569,7 @@ def Plot1(ds_target, ds_model, ds_obs, var, region=[360-90, 360-0, 20, 80], focu
 
     # Save Plots
     if save:
-        plotname = savedir+'Plot1.{}.{}.{}.png'.format(focus_model.replace(" ", "_"),var,da_model.time_avg)
+        plotname = savedir+'/Plot1.{}.{}.{}.png'.format(focus_model.replace(" ", "_"),var,da_model.time_avg)
         fig.savefig(plotname)
         #fig.savefig('/glade/u/home/tking/work/mdtf/wkdir/natl_ocean/model/Plot1.focus_model.thetao_zavg.time_avg.png') # TODO: try hardcoded to get plots showing up
 
@@ -597,7 +597,7 @@ def Plot2(ds_x, var_x, ds_y, var_y, focus_model, save=False, savedir='./'):
 
     # Save Plots
     if save:
-        plotname = savedir+'Plot2.{}.{}_{}.{}_{}.png'.format(focus_model.replace(" ", "_"),var_x,ds_x[var_x].time_avg,var_y,ds_y[var_y].time_avg)
+        plotname = savedir+'/Plot2.{}.{}_{}.{}_{}.png'.format(focus_model.replace(" ", "_"),var_x,ds_x[var_x].time_avg,var_y,ds_y[var_y].time_avg)
         fig.savefig(plotname)
 
     return 

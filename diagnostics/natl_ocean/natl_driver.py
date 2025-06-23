@@ -200,22 +200,20 @@ ds_obs = xr.open_dataset(obs_path).load()
 
 # Time Subselection: Climatology is set to 1989-2018. Select closest match.
 climo_years = [1989, 2018]
-# model_temp_dataset = model_temp_dataset.sel(time=slice(str(climo_years[0]),str(climo_years[1])))
-# model_salt_dataset = model_salt_dataset.sel(time=slice(str(climo_years[0]),str(climo_years[1])))
 ds_target = ds_target.sel(time=slice(str(climo_years[0]),str(climo_years[1])))
 
 # CALCULATIONS ------------------------------------------------------------------
 # Compute Sigma0 and MLD 
-#ds_target['sigma0'] = POD_utils.compute_sigma0(ds_target['thetao'], ds_target['so'])
-#ds_target['mld'] = POD_utils.compute_mld(ds_target['sigma0'])
+ds_target['sigma0'] = POD_utils.compute_sigma0(ds_target['thetao'], ds_target['so'])
+ds_target['mld'] = POD_utils.compute_mld(ds_target['sigma0'])
 
 # Compute Depth-average Fields (hard-wired for 200m-depth average)
-zavg_var_list = ['thetao', 'so'] # sigma0
+zavg_var_list = ['thetao', 'so', 'sigma0']
 for var in zavg_var_list:
     POD_utils.compute_zavg(ds_target, var)
 
 # Drop 3D fields
-ds_target = ds_target.drop_vars(['thetao','so']) #,'sigma0'])
+ds_target = ds_target.drop_vars(['thetao','so','sigma0'])
 
 # Regrid
 ds_target = POD_utils.regrid(ds_target, method='bilinear')
@@ -228,8 +226,8 @@ ds_target = ds_target.assign_coords({'model': model_name})
 # PLOTS -------------------------------------------------------------------------
 ds_t200 = POD_utils.Plot1(ds_target, ds_model, ds_obs, 'thetao_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
 ds_s200 = POD_utils.Plot1(ds_target, ds_model, ds_obs, 'so_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
-#ds_sig200 = POD_utils.Plot1(ds_target, ds_model, ds_obs, 'sigma0_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
-#ds_mld = POD_utils.Plot1(ds_target, ds_model, ds_obs, 'mld', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
+ds_sig200 = POD_utils.Plot1(ds_target, ds_model, ds_obs, 'sigma0_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
+ds_mld = POD_utils.Plot1(ds_target, ds_model, ds_obs, 'mld', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
 POD_utils.Plot2(ds_t200, 'thetao_zavg_bias', ds_s200, 'so_zavg_bias', model_name, save=savefig, savedir=outmod_dir)
 
 # SAVE FIGS -> HTML
