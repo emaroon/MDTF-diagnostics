@@ -365,7 +365,6 @@ def SpatialBias_panel(da, stats, focus_region, focus_model, ax):
     ax.add_feature(cfeature.COASTLINE)
 
     # Plot
-    #cntr1 = ax.contourf(da_model['lon'], da_model['lat'], da_model, levels=levs, cmap=cmap, extend='both', transform=proj)
     cntr1 = ax.pcolormesh(da_model['lon'], da_model['lat'], da_model, shading='nearest', cmap=cmap, norm=norm, rasterized=True, transform=proj)
     cbar = plt.colorbar(cntr1, ax=ax, orientation='vertical', spacing='proportional', pad=.01)
     cbar.set_label(label=r'{}'.format(da.units), size=font_label, rotation=270, labelpad=5)
@@ -388,7 +387,7 @@ def SpatialBias_panel(da, stats, focus_region, focus_model, ax):
 def SpatialRank_panel(da, focus_region, focus_model, ax):
     var = da.name
     var_name = get_varname(var)
-    da_model = da.sel(model=focus_model)  #Create DataArray of the target model alone
+    da_model = da.sel(model=focus_model)  # Create DataArray of the target model alone
 
     # Fontsizes
     font_title = 18
@@ -419,7 +418,6 @@ def SpatialRank_panel(da, focus_region, focus_model, ax):
                             )
 
     # Plot
-    #cntr1 = ax.contourf(rank_da['lon'], rank_da['lat'], rank_da, levels=levs, cmap=cmap, transform=proj, extend='min')  
     cntr1 = ax.pcolormesh(rank_da['lon'], rank_da['lat'], rank_da, shading='nearest', cmap=cmap, norm=norm, rasterized=True, transform=proj)
     
     cbar = plt.colorbar(cntr1, ax=ax, orientation='vertical', spacing='proportional', pad=0.01)
@@ -571,7 +569,6 @@ def Plot1(ds_target, ds_model, ds_obs, var, region=[360-90, 360-0, 20, 80], focu
     if save:
         plotname = savedir+'/Plot1.{}.{}.{}.png'.format(focus_model.replace(" ", "_"),var,da_model.time_avg)
         fig.savefig(plotname)
-        #fig.savefig('/glade/u/home/tking/work/mdtf/wkdir/natl_ocean/model/Plot1.focus_model.thetao_zavg.time_avg.png') # TODO: try hardcoded to get plots showing up
 
     return ds_stats
 

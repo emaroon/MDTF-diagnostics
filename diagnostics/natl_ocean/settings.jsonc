@@ -84,8 +84,15 @@
       "standard_name" : "sea_water_potential_temperature",
       "units": "degC"
     },
- //   "uo": {
- //     "frequency" : "month",
+    "lev_bnds": {
+      "frequency" : "month",
+      "realm": "ocean",
+      "dimensions": ["time", "lev", "lat", "lon"],
+      "standard_name" : "level_bounds",
+      "units": "m"
+    },
+//   "uo": {
+//   "frequency" : "month",
 //      "realm": "ocean",
 //      "dimensions": ["time", "lev", "lat", "lon"],
 //      "standard_name" : "sea_water_x_velocity",
