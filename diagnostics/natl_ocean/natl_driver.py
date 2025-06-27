@@ -61,7 +61,6 @@
 #     thetao    Potential temperature   degrees Celsius  3D: time × depth × lat × lon
 #     so        Salinity                PSU              3D: time × depth × lat × lon
 #     lev       Depth level             m or cm          2D
-#     lev_bnds  Depth level bounds      m or cm          2D: lev × bnds (bnds = 2)
 #     lon, lat  Longitude and latitude  degrees          1D or 2D grid coordinates
 #     time      Time dimension          datetime         1D
 #
@@ -97,8 +96,6 @@ month = 13
 savefig = True
 
 # LOAD IN MODEL VARIABLES NEEDED FOR ALL PARTS  ##########################
-print("I MADE IT!")
-
 case_env_file = os.environ["case_env_file"]
 assert os.path.isfile(case_env_file), f"case environment file not found"
 with open(case_env_file, 'r') as stream:
@@ -109,12 +106,11 @@ with open(case_env_file, 'r') as stream:
 
 cat_def_file = case_info['CATALOG_FILE']
 case_list = case_info['CASE_LIST']
-# all cases share variable names and dimension coords in this example, so just get first result for each
-print(case_list)
 
+# all cases share variable names and dimension coords in this example, so just get first result for each
+volcello_var = [case['volcello_var'] for case in case_list.values()][0]
+areacello_var = [case['areacello_var'] for case in case_list.values()][0]
 temp_var = [case['thetao_var'] for case in case_list.values()][0]
-# uvel_var = [case['UO_var'] for case in case_list.values()][0]
-# vvel_var = [case['VVEL_var'] for case in case_list.values()][0]
 hfds_var = [case['hfds_var'] for case in case_list.values()][0]
 salt_var = [case['so_var'] for case in case_list.values()][0]
 
@@ -128,8 +124,6 @@ for case in case_list.values():
     else:
         print('vsf_var or wfo_var not found in case')
 
-areacello_var = [case['areacello_var'] for case in case_list.values()][0]
-
 # loading coords; this is currently written for multicase mode, but ignoring the other possible cases, 
 # because there's only one
 # TODO: change later to work for single case mode?
@@ -139,35 +133,35 @@ lat_coord = [case['lat_coord'] for case in case_list.values()][0]
 lev_coord = [case['lev_coord'] for case in case_list.values()][0] 
 
 # method 1 for loading in variables: use the catalog (IDEAL) ----------
-cat_def_file = case_info['CATALOG_FILE']
-print(cat_def_file)
+# cat = intake.open_esm_datastore(cat_def_file)
 
-cat = intake.open_esm_datastore(cat_def_file)
+# print('This is the catalog', cat)
 
-print('This is the catalog', cat)
-
-# Temperature
-temp_subset = cat.search(variable_id=temp_var, frequency="month")
-temp_dict = temp_subset.to_dataset_dict(
-    xarray_open_kwargs={"decode_times": True, "use_cftime": True}
-)
+## Temperature
+# temp_subset = cat.search(variable_id=temp_var, frequency="month")
+# temp_dict = temp_subset.to_dataset_dict(
+#     xarray_open_kwargs={"decode_times": True, "use_cftime": True}
+# )
 
 # method 2: load the file directly (slightly less ideal) ----------------
 # ThetaO
-input_path = os.environ["THETAO_FILE"]
-model_temp_dataset = xr.open_dataset(input_path)
+model_temp_dataset = xr.open_dataset(os.environ["THETAO_FILE"])
 
 # Salt
-input_path = os.environ["SO_FILE"]
-model_salt_dataset = xr.open_dataset(input_path)
+model_salt_dataset = xr.open_dataset(os.environ["SO_FILE"])
 
 # SHF
-input_path = os.environ["HFDS_FILE"]
-model_hfds_dataset = xr.open_dataset(input_path)
+model_hfds_dataset = xr.open_dataset(os.environ["HFDS_FILE"])
 
 # TArea
-input_path = os.environ["AREACELLO_FILE"]
-model_area_dataset = xr.open_dataset(input_path)
+model_area_dataset = xr.open_dataset(os.environ["AREACELLO_FILE"])
+
+# Volume
+model_vol_dataset = xr.open_dataset(os.environ["VOLCELLO_FILE"])
+
+vol = model_vol_dataset[volcello_var]
+area = model_area_dataset[areacello_var]
+dz = vol/area
 
 # ---------------------------------------------------------------------
 
@@ -178,35 +172,34 @@ outobs_dir = os.path.join(WORK_DIR, "obs")
 
 # PART 1: NORTH ATLANTIC BIAS ASSESSMENT ######################################
 
-print('at part 1')
-### DATA INGEST FROM NOTEBOOK: # TODO: Probably replace with catalog portion and/or create a new file!
-ds_target = xr.open_dataset('/glade/collections/cmip/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Omon/thetao/gn/v20190308/thetao_Omon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc')
-# ds_target = model_temp_dataset
-ds_salt = xr.open_dataset('/glade/collections/cmip/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Omon/so/gn/v20190308/so_Omon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc')
-# ds_salt = model_salt_dataset
-# ds_target['so'] = model_salt_dataset
-
-ds_target['so'] = ds_salt['so']
+print('At Part 1: North Atlantic Bias Assessment')
+### DATA INGEST FROM NOTEBOOK: # TODO: Replace with catalog portion and/or create a new file!
+#ds_target = xr.open_dataset('/glade/collections/cmip/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Omon/thetao/gn/v20190308/thetao_Omon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc')
+#ds_salt = xr.open_dataset('/glade/collections/cmip/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Omon/so/gn/v20190308/so_Omon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc')
+# ds_target['so'] = ds_salt['so']
+# WE WANT TO USE THIS INSTEAD!
+ds_target = model_temp_dataset
+ds_target['so'] = model_salt_dataset['so']
 
 ## TODO: This step may not be needed in MDTF?
-ds_target = POD_utils.preprocess_coords(ds_target)
+#ds_target = POD_utils.preprocess_coords(ds_target)
 
 # LOAD IN T/S OBS AND OMIP DATASET --------------------------------------------
 obsdir = os.environ["OBS_DATA"]
 # omip_dir = os.environ["OMIP_DATA"]
 
-# Open OMIP data  # TODO: this should probably just load omip above!
+# Open OMIP data  # TODO: this should probably just load omip above but file not ingested yet!
 omip_file = '/glade/work/brendanmy/S_Yeager/Sub2Sub/data_archive/POD_data/omip2.cycle1.1989_2018.mld_sic_t200_s200_sigma200.nc'
 # omip_file = omip_dir+'omip2.cycle1.1989_2018.mld_sic_t200_s200_sigma200.nc'
 ds_model = xr.open_dataset(omip_file).isel(OMIP=0).load()
 
-# Open Obs # TODO: this should probably just use the obsdir above!
+# Open Obs # TODO: this should probably just use the obsdir above but file not ingested yet!
 obs_path = '/glade/campaign/cgd/ccr/yeager/Sub2Sub/POD_data/obs_1x1.nc'
 ds_obs = xr.open_dataset(obs_path).load()
 # ds_obs = xr.open_dataset(obsdir+'obs_1x1.nc').load()
 
 # Time Subselection: Climatology is set to 1989-2018. Select closest match.
-climo_years = [1989, 2018]
+climo_years = [1980, 1981]
 ds_target = ds_target.sel(time=slice(str(climo_years[0]),str(climo_years[1])))
 
 # CALCULATIONS ------------------------------------------------------------------
@@ -217,7 +210,7 @@ ds_target['mld'] = POD_utils.compute_mld(ds_target['sigma0'])
 # Compute Depth-average Fields (hard-wired for 200m-depth average)
 zavg_var_list = ['thetao', 'so', 'sigma0']
 for var in zavg_var_list:
-    POD_utils.compute_zavg(ds_target, var)
+    ds_target = POD_utils.compute_zavg(ds_target, var, dz)
 
 # Drop 3D fields
 ds_target = ds_target.drop_vars(['thetao','so','sigma0'])
@@ -226,8 +219,12 @@ ds_target = ds_target.drop_vars(['thetao','so','sigma0'])
 ds_target = POD_utils.regrid(ds_target, method='bilinear')
 
 # Compute climatology
-ds_target = ds_target.groupby('time.month').mean('time', keep_attrs=True)
+vars_to_group = ['mld', 'so_zavg', 'thetao_zavg','sigma0_zavg']
+monthly_ds = xr.Dataset()
+for var in vars_to_group:
+    monthly_ds[var] = ds_target[var].groupby('time.month').mean('time', keep_attrs=True)
 
+# ds_target = ds_target.groupby('time.month').mean('time', keep_attrs=True)  #TODO: removing this seems questionable!
 ds_target = ds_target.assign_coords({'model': model_name})
 
 # PLOTS -------------------------------------------------------------------------

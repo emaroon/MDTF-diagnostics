@@ -84,12 +84,11 @@
       "standard_name" : "sea_water_potential_temperature",
       "units": "degC"
     },
-    "lev_bnds": {
-      "frequency" : "month",
+    "volcello": {
       "realm": "ocean",
-      "dimensions": ["time", "lev", "lat", "lon"],
-      "standard_name" : "level_bounds",
-      "units": "m"
+      "dimensions": ["lev", "lat", "lon"],
+      "standard_name" : "ocean_volume",
+      "units": "m3"
     },
 //   "uo": {
 //   "frequency" : "month",

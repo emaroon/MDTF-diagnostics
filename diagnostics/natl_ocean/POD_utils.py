@@ -172,6 +172,9 @@ def get_dlev(lev, lev_bnds, depth_limit=10000):
         dlev = xr.DataArray(lev_bnds_lim[1:].values - lev_bnds_lim[0:-1].values,coords={'lev':lev})
     elif (np.size(lev_bnds_lim.dims)==2):
         dlev = lev_bnds_lim.isel(bnds=1) - lev_bnds_lim.isel(bnds=0)
+    elif (np.size(lev_bnds_lim.dims)==3):
+        print('using dz') # TODO: double check that we should use this rather than dim==1 version!
+        dlev = xr.DataArray(lev_bnds_lim[1:].values - lev_bnds_lim[0:-1].values) #,coords={'lev':lev})
     else:
         raise ValueError('ERROR: could not handle lev_bnds')
     return dlev
@@ -184,15 +187,42 @@ def check_depth_units(ds):
     return ds
 
 
-def compute_zavg(ds, var):
+def compute_zavg(ds, var, dz, depth=1000):
     """
     Compute thickness-weighted mean over depth for field.
     """
-    depth = 200
-    dlev = get_dlev(ds['lev'], ds['lev_bnds'], depth_limit=depth)
-    newvar = f'{var}_zavg'
-    ds[newvar] = ds[var].weighted(dlev).mean('lev',keep_attrs=True).astype('float32')
-    ds[newvar] = ds[newvar].assign_attrs({'zavg': f'0-{depth}m'})
+    # Ensure lev is available
+    lev = ds['lev']
+
+    # Find valid levels shallower than depth
+    valid_mask = lev <= depth
+    valid_levs = lev.where(valid_mask, drop=True)
+    if valid_levs.size == 0:
+        print(f"Warning: No valid levels found for depth={depth}m in variable '{var}'")
+        return ds
+
+    # Slice the variable and weights to these levels
+    data = ds[var].sel(lev=valid_levs)
+    dz_sel = dz.sel(lev=valid_levs)
+
+    # Ensure dz is a DataArray and broadcastable
+    if not isinstance(dz_sel, xr.DataArray):
+        dz_sel = xr.DataArray(dz_sel, coords={'lev': valid_levs}, dims='lev')
+
+    # Broadcast dz to match data shape
+    dz_broadcast = dz_sel.broadcast_like(data)
+
+    # Debug prints if needed
+    # print(f"{var} shape before mean: {data.shape}")
+    # print(f"dz shape: {dz_broadcast.shape}")
+
+    # Do the weighted mean
+    newvar = f"{var}_zavg"
+    result = data.weighted(dz_broadcast).mean('lev', keep_attrs=True).astype('float32')
+
+    # Add to dataset and annotate
+    ds[newvar] = result
+    ds[newvar].attrs['zavg'] = f'0-{depth}m'
     return ds
 
 
@@ -513,12 +543,28 @@ def error_stats(da,region,fregion):
 def plot_preproc(da,region,month):
     monstr = {1:'JAN',2:'FEB',3:'MAR',4:'APR',5:'MAY',6:'JUN',7:'JUL',8:'AUG',9:'SEP',10:'OCT',11:'NOV',12:'DEC'}
     da = da.sel(lat=slice(region[2], region[3]), lon=slice(region[0], region[1]))
-    if (month==13):
-        # annual mean
-        da = da.mean('month').assign_attrs({'time_avg':'Annual'})
+    
+    # Add 'month' coordinate from 'time'
+    if 'time' in da.coords:
+        da = da.assign_coords(month=da['time'].dt.month)
+        if (month==13):
+            # annual mean
+            da = da.groupby('month').mean('time').mean('month').assign_attrs({'time_avg': 'Annual'})
+            # da = da.mean('month').assign_attrs({'time_avg':'Annual'})
+        else:
+            # monthly mean
+            da = da.groupby('month').mean('time').sel(month=month).assign_attrs({'time_avg': monstr[month]})
+            # da = da.sel(month=month).assign_attrs({'time_avg':monstr[month]})
+    elif 'month' in da.dims:
+        # Already has monthly mean as a dimension
+        if month == 13:
+            da = da.mean('month').assign_attrs({'time_avg': 'Annual'})
+        else:
+            da = da.sel(month=month).assign_attrs({'time_avg': monstr[month]})
+
     else:
-        # monthly mean
-        da = da.sel(month=month).assign_attrs({'time_avg':monstr[month]})
+        raise ValueError("DataArray must have either 'time' coordinate or 'month' dimension for time averaging")
+
     return da
 
 def get_units(var):
