@@ -51,10 +51,10 @@ Functionality
 5. Plotting
      Generate spatial and statistical visualizations of model performance using POD_utils.py.
      Key Functions:
-       Plot1(...): Produces two-panel maps for each variable (bias + bias rank).
+       SpatialPlot_climo_bias(...): Produces two-panel maps for each variable (bias + bias rank).
          SpatialBias_panel(...): Shows spatial bias and regional stats.
          SpatialRank_panel(...): Shows where the target model ranks in bias among OMIP models.
-       Plot2(...): Scatter plot comparing regional bias statistics between two variables.
+       ScatterPlot_Error(...): Scatter plot comparing regional bias statistics between two variables.
          Uses Scatter_panel(...) to visualize model-model comparisons.
 
 6. Optional: Multi-Cycle OMIP Time Handling

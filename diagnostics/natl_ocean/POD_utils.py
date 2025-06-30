@@ -273,23 +273,6 @@ def regrid(ds, var=None, names=None, target_grid=None, dlon=1, dlat=1, method='b
         rgd = regridder(ds[var], keep_attrs=True, skipna=True, na_thres=0.6)
 
     return rgd
-                
-
-def reorg_by_cycle(ds,nt,ncyc,yearrange):
-    ''' Function to create cycle dimension.'''
-    ds_list = []
-    cycle = xr.DataArray(np.arange(ncyc)+1,dims=['cycle'])
-    nyear = yearrange[1] - yearrange[0] +1
-    nmonth = nyear*12
-    time_vals = [cftime.DatetimeNoLeap(yearrange[0]+year, 1+month, 15) for year in range(nyear) for month in range(12)]
-    for i in range(ncyc):
-        m0 = i*nmonth
-        m1 = m0+nmonth
-        ds_tmp = ds.isel(time=slice(m0,m1))
-        ds_tmp['time'] = time_vals
-        ds_list.append(ds_tmp.chunk({'time':1}))
-    ds_new = xr.concat(ds_list,dim=cycle,coords="minimal")
-    return ds_new
 
 
 def forcing_cycles(expid,nt):
@@ -571,9 +554,9 @@ def get_units(var):
     unit_dict = {'thetao_zavg':r'$^{\circ}$C','thetao':r'$^{\circ}$C','so_zavg':'psu','so':'psu','sigma0':r'kg m$^{-3}$','sigma0_zavg':r'kg m$^{-3}$','mld':'m'}
     return unit_dict[var]
 
-def Plot1(ds_target, ds_model, ds_obs, var, region=[360-90, 360-0, 20, 80], focus_region=[360-48, 360-30, 38, 53], month=13, save=False, savedir='./'):
+def SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, var, region=[360-90, 360-0, 20, 80], focus_region=[360-48, 360-30, 38, 53], month=13, save=False, savedir='./'):
     '''
-    Plot1 generates spatial plots of climatological bias and bias rank relative to a CMIP6 OMIP2 simulation library.
+    SpatialPlot_climo_bias generates spatial plots of climatological bias and bias rank relative to a CMIP6 OMIP2 simulation library.
 
     Parameters:
         ds_target (xarray.Dataset) : Dataset containing the target model data to be analyzed. Must have dimensions: 'model', 'lat', 'lon', 'month'
@@ -613,14 +596,14 @@ def Plot1(ds_target, ds_model, ds_obs, var, region=[360-90, 360-0, 20, 80], focu
 
     # Save Plots
     if save:
-        plotname = savedir+'/Plot1.{}.{}.{}.png'.format(focus_model.replace(" ", "_"),var,da_model.time_avg)
+        plotname = savedir+'/SpatialPlot_climo_bias.{}.{}.{}.png'.format(focus_model.replace(" ", "_"),var,da_model.time_avg)
         fig.savefig(plotname)
 
     return ds_stats
 
-def Plot2(ds_x, var_x, ds_y, var_y, focus_model, save=False, savedir='./'):
+def ScatterPlot_Error(ds_x, var_x, ds_y, var_y, focus_model, save=False, savedir='./'):
     '''
-    Plot2 generates a scatter plot relating error statistics generated through calls to Plot1.
+    ScatterPlot_Error generates a scatter plot relating error statistics generated through calls to SpatialPlot_climo_bias().
 
     Parameters:
         ds_x (xarray.Dataset) : Dataset containing the error statistics to be analyzed. Must have dimensions: 'model'
@@ -640,7 +623,7 @@ def Plot2(ds_x, var_x, ds_y, var_y, focus_model, save=False, savedir='./'):
 
     # Save Plots
     if save:
-        plotname = savedir+'/Plot2.{}.{}_{}.{}_{}.png'.format(focus_model.replace(" ", "_"),var_x,ds_x[var_x].time_avg,var_y,ds_y[var_y].time_avg)
+        plotname = savedir+'/ScatterPlot_Error.{}.{}_{}.{}_{}.png'.format(focus_model.replace(" ", "_"),var_x,ds_x[var_x].time_avg,var_y,ds_y[var_y].time_avg)
         fig.savefig(plotname)
 
     return 

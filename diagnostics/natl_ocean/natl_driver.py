@@ -39,10 +39,10 @@
 #   5. Plotting
 #        Generate spatial and statistical visualizations of model performance using POD_utils.py.
 #        Key Functions:
-#          Plot1(...): Produces two-panel maps for each variable (bias + bias rank).
+#          SpatialPlot_climo_bias(...): Produces two-panel maps for each variable (bias + bias rank).
 #            SpatialBias_panel(...): Shows spatial bias and regional stats.
 #            SpatialRank_panel(...): Shows where the target model ranks in bias among OMIP models.
-#          Plot2(...): Scatter plot comparing regional bias statistics between two variables.
+#          ScatterPlot_Error(...): Scatter plot comparing regional bias statistics between two variables.
 #            Uses Scatter_panel(...) to visualize model-model comparisons.
 #
 #   6. Optional: Multi-Cycle OMIP Time Handling
@@ -228,11 +228,11 @@ for var in vars_to_group:
 ds_target = ds_target.assign_coords({'model': model_name})
 
 # PLOTS -------------------------------------------------------------------------
-ds_t200 = POD_utils.Plot1(ds_target, ds_model, ds_obs, 'thetao_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
-ds_s200 = POD_utils.Plot1(ds_target, ds_model, ds_obs, 'so_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
-ds_sig200 = POD_utils.Plot1(ds_target, ds_model, ds_obs, 'sigma0_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
-ds_mld = POD_utils.Plot1(ds_target, ds_model, ds_obs, 'mld', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
-POD_utils.Plot2(ds_t200, 'thetao_zavg_bias', ds_s200, 'so_zavg_bias', model_name, save=savefig, savedir=outmod_dir)
+ds_t200 = POD_utils.SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, 'thetao_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
+ds_s200 = POD_utils.SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, 'so_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
+POD_utils.SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, 'sigma0_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
+POD_utils.SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, 'mld', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
+POD_utils.ScatterPlot_Error(ds_t200, 'thetao_zavg_bias', ds_s200, 'so_zavg_bias', model_name, save=savefig, savedir=outmod_dir)
 
 # SAVE FIGS -> HTML
 
