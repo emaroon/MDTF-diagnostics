@@ -445,12 +445,6 @@
       "units": "cm2",
       "ndim": 2
     },
-    "lev_bnds": {
-      "standard_name": "level_bounds", //TODO: check this
-      "realm": "ocean",
-      "units": "m",
-      "ndim": 2
-    },
 
    // Variables for Convective Transition Diagnostics module:
     // ta: 3D temperature, units = K:
