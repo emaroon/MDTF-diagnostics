@@ -84,8 +84,14 @@
       "standard_name" : "sea_water_potential_temperature",
       "units": "degC"
     },
- //   "uo": {
- //     "frequency" : "month",
+    "volcello": {
+      "realm": "ocean",
+      "dimensions": ["lev", "lat", "lon"],
+      "standard_name" : "ocean_volume",
+      "units": "m3"
+    },
+//   "uo": {
+//   "frequency" : "month",
 //      "realm": "ocean",
 //      "dimensions": ["time", "lev", "lat", "lon"],
 //      "standard_name" : "sea_water_x_velocity",

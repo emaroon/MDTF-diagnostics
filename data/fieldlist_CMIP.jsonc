@@ -47,7 +47,13 @@
       "scalar_coord_templates": {"plev": "va{value}"},
       "ndim": 4
     },
-     "wind_speed": {
+    "volcello": {
+      "standard_name": "ocean_volume",
+      "realm": "ocean",
+      "units": "m3",
+      "ndim": 3
+    },
+    "wind_speed": {
       "standard_name": "wind_speed",
       "realm": "atmos",
       "units": "m s-1",

@@ -53,11 +53,11 @@
   "OBS_DATA_ROOT": "/glade/work/emaroon/mdtf/inputdata/obs_data",
 
   // Working directory.
-  "WORK_DIR": "/glade/work/emaroon/mdtf/wkdir",
+  "WORK_DIR": "/glade/u/home/tking/work/mdtf/wkdir",
 
   // Directory to write output. The results of each run of the framework will be
   // put in a subdirectory of this directory. Defaults to WORKING_DIR if blank.
-  "OUTPUT_DIR": "/glade/work/emaroon/mdtf/wkdir",
+  "OUTPUT_DIR": "/glade/u/home/tking/work/mdtf/wkdir",
 
   // Location of the Anaconda/miniconda or micromamba installation to use for managing
   // dependencies (path returned by running `conda info --base` or `micromamba info`.)
