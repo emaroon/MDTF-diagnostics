@@ -33,7 +33,15 @@
              "axis": "Z",
              "positive": "down"
             },
-    "time": {"standard_name": "time"}
+    "time": {"standard_name": "time"}//,
+//    "lev_bnds": {"standard_name": "depth_bounds",
+//                 "axis": "OTHER",
+//                 "units": "None"
+ //               }
+//    "bnds": {"standard_name": "bound",
+//             "axis": "OTHER",
+//             "units": "None"  
+//             }
   },
 
 // Variables
@@ -45,6 +53,12 @@
       "standard_name" : "sea_surface_temperature",
       "units": "degC"
     },
+  //  "lev_bnds": {
+  //    "realm": "ocean",
+  //    "dimensions": ["lev","bnds"],
+  //    "standard_name": "depth_bounds",
+  //    "units": "m"
+  //  },
  //   "wfo": {
  //     "frequency" : "month",
 //      "realm": "ocean",
@@ -109,8 +123,13 @@
       "dimensions": ["lat", "lon"],
       "standard_name" : "cell_area",
       "units": "m2"
+    },
+    "volcello": {
+      "realm": "ocean",
+      "dimensions": ["lev", "lat", "lon"],
+      "standard_name" : "ocean_volume",
+      "units": "m3"
     }
-
   }
 }
 

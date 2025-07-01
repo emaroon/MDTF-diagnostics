@@ -228,6 +228,12 @@
       "units": "Pa",
       "ndim": 3
     },
+    "volcello": {
+      "standard_name": "ocean_volume",
+      "realm": "ocean",
+      "units": "m3",
+      "ndim": 3
+    },
     "areacello": {
       "standard_name": "cell_area",
       "realm": "ocean",

@@ -124,11 +124,14 @@ for case in case_list.values():
         print('vsf_var or wfo_var not found in case')
 
 # Load the files ------------------------------------------------------
+
+time_coord = [case['time_coord'] for case in case_list.values()][0]
+lon_coord = [case['lon_coord'] for case in case_list.values()][0]
+lat_coord = [case['lat_coord'] for case in case_list.values()][0]
+lev_coord = [case['lev_coord'] for case in case_list.values()][0] 
+
 # ThetaO
 model_temp_dataset = xr.open_dataset(os.environ["THETAO_FILE"])
-
-# Salt
-model_salt_dataset = xr.open_dataset(os.environ["SO_FILE"])
 
 # SHF
 model_hfds_dataset = xr.open_dataset(os.environ["HFDS_FILE"])
@@ -136,7 +139,13 @@ model_hfds_dataset = xr.open_dataset(os.environ["HFDS_FILE"])
 # TArea
 model_area_dataset = xr.open_dataset(os.environ["AREACELLO_FILE"])
 
-# Volume
+#SALT
+model_salt_dataset = xr.open_dataset(os.environ["SO_FILE"])
+
+#TAREA
+model_area_dataset = xr.open_dataset(os.environ["AREACELLO_FILE"])
+
+#VOLUME
 model_vol_dataset = xr.open_dataset(os.environ["VOLCELLO_FILE"])
 
 vol = model_vol_dataset[volcello_var]
@@ -167,12 +176,14 @@ obsdir = os.environ["OBS_DATA"]
 # omip_dir = os.environ["OMIP_DATA"]
 
 # Open OMIP data  # TODO: this should probably just load omip above but file not ingested yet!
+#TODO - ADD THIS TO "OBS" DIR 
 omip_file = '/glade/work/brendanmy/S_Yeager/Sub2Sub/data_archive/POD_data/omip2.cycle1.1989_2018.mld_sic_t200_s200_sigma200.nc'
 # omip_file = omip_dir+'omip2.cycle1.1989_2018.mld_sic_t200_s200_sigma200.nc'
 ds_model = xr.open_dataset(omip_file).isel(OMIP=0).load()
 #ds_model = xr.open_dataset(omip_file).load()
 
 # Open Obs # TODO: this should probably just use the obsdir above but file not ingested yet!
+# TODO ADD TO OBS DIR
 obs_path = '/glade/campaign/cgd/ccr/yeager/Sub2Sub/POD_data/obs_1x1.nc'
 ds_obs = xr.open_dataset(obs_path).load()
 # ds_obs = xr.open_dataset(obsdir+'obs_1x1.nc').load()
@@ -182,11 +193,11 @@ ds_target = ds_target.sel(time=slice(start_year, end_year))
 
 # PERFORM CALCULATIONS --------------------------------------------------------
 # Compute Sigma0 and MLD 
-ds_target['sigma0'] = POD_utils.compute_sigma0(ds_target['thetao'], ds_target['so'])
+ds_target['sigma0'] = POD_utils.compute_sigma0(ds_target[temp_var], ds_target[salt_var])
 ds_target['mld'] = POD_utils.compute_mld(ds_target['sigma0'])
 
 # Compute Depth-average Fields (hard-wired for 200m-depth average)
-zavg_var_list = ['thetao', 'so', 'sigma0']
+zavg_var_list = [temp_var, salt_var, 'sigma0']
 for var in zavg_var_list:
     if not isinstance(dz, xr.DataArray):
         raise TypeError(f"Expected dz to be a DataArray, got {type(dz)}")
