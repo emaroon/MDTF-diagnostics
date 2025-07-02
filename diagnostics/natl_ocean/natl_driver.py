@@ -193,7 +193,7 @@ ds_obs = xr.open_dataset(obs_path).load()
 # ds_obs = xr.open_dataset(obsdir+'obs_1x1.nc').load()
 
 # Time Subselection: Climatology is set to 1989-2018. Select closest match.
-climo_years = [1980, 1981]
+climo_years = [1989, 2018]
 ds_target = ds_target.sel(time=slice(str(climo_years[0]),str(climo_years[1])))
 
 # CALCULATIONS ------------------------------------------------------------------
