@@ -81,7 +81,7 @@ import POD_utils
 
 # User Settings #########################################################
 # Shortname of model to be analyzed
-model_name = 'CESM2 Hist'
+# model_name = 'CESM2 Hist'
 
 # Plot Lat/Lon Region
 plot_region = [360-90, 360-0, 20, 80]
@@ -106,6 +106,7 @@ with open(case_env_file, 'r') as stream:
 
 cat_def_file = case_info['CATALOG_FILE']
 case_list = case_info['CASE_LIST']
+model_name = list(case_list.keys())[0]
 
 # all cases share variable names and dimension coords in this example, so just get first result for each
 volcello_var = [case['volcello_var'] for case in case_list.values()][0]
