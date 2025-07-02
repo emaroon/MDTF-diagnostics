@@ -81,7 +81,7 @@ import POD_utils
 
 # User Settings #########################################################
 # Shortname of model to be analyzed
-model_name = 'CESM2 Hist'
+# model_name = 'CESM2 Hist'
 
 # Plot Lat/Lon Region
 plot_region = [360-90, 360-0, 20, 80]
@@ -106,6 +106,7 @@ with open(case_env_file, 'r') as stream:
 
 cat_def_file = case_info['CATALOG_FILE']
 case_list = case_info['CASE_LIST']
+model_name = list(case_list.keys())[0]
 
 # all cases share variable names and dimension coords in this example, so just get first result for each
 volcello_var = [case['volcello_var'] for case in case_list.values()][0]
@@ -173,16 +174,9 @@ outobs_dir = os.path.join(WORK_DIR, "obs")
 # PART 1: NORTH ATLANTIC BIAS ASSESSMENT ######################################
 
 print('At Part 1: North Atlantic Bias Assessment')
-### DATA INGEST FROM NOTEBOOK: # TODO: Replace with catalog portion and/or create a new file!
-#ds_target = xr.open_dataset('/glade/collections/cmip/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Omon/thetao/gn/v20190308/thetao_Omon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc')
-#ds_salt = xr.open_dataset('/glade/collections/cmip/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Omon/so/gn/v20190308/so_Omon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc')
-# ds_target['so'] = ds_salt['so']
-# WE WANT TO USE THIS INSTEAD!
+### Data Ingest from Catalogue
 ds_target = model_temp_dataset
 ds_target['so'] = model_salt_dataset['so']
-
-## TODO: This step may not be needed in MDTF?
-#ds_target = POD_utils.preprocess_coords(ds_target)
 
 # LOAD IN T/S OBS AND OMIP DATASET --------------------------------------------
 obsdir = os.environ["OBS_DATA"]
@@ -199,7 +193,7 @@ ds_obs = xr.open_dataset(obs_path).load()
 # ds_obs = xr.open_dataset(obsdir+'obs_1x1.nc').load()
 
 # Time Subselection: Climatology is set to 1989-2018. Select closest match.
-climo_years = [1980, 1981]
+climo_years = [1989, 2018]
 ds_target = ds_target.sel(time=slice(str(climo_years[0]),str(climo_years[1])))
 
 # CALCULATIONS ------------------------------------------------------------------

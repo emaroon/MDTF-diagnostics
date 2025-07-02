@@ -40,7 +40,8 @@ Functionality
        regrid(ds, method='bilinear'): Uses xESMF for bilinear regridding, with NaN handling and global domain definition.
 
 3. Time Averaging (Climatology)
-     Convert the time series into a monthly climatology over 1989–2018 using user-controlled driver script
+     Convert the time series into a monthly climatology over 1989–2018 using user-controlled driver script.
+     Note that it is recommended to use climo_years from the model experiment that match the OMIP file, but not necessary.
 
 4. Bias Calculation Against Observations
      Compute model bias relative to observations and calculate error statistics using POD_utils.py.
