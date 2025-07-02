@@ -174,16 +174,9 @@ outobs_dir = os.path.join(WORK_DIR, "obs")
 # PART 1: NORTH ATLANTIC BIAS ASSESSMENT ######################################
 
 print('At Part 1: North Atlantic Bias Assessment')
-### DATA INGEST FROM NOTEBOOK: # TODO: Replace with catalog portion and/or create a new file!
-#ds_target = xr.open_dataset('/glade/collections/cmip/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Omon/thetao/gn/v20190308/thetao_Omon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc')
-#ds_salt = xr.open_dataset('/glade/collections/cmip/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Omon/so/gn/v20190308/so_Omon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc')
-# ds_target['so'] = ds_salt['so']
-# WE WANT TO USE THIS INSTEAD!
+### Data Ingest from Catalogue
 ds_target = model_temp_dataset
 ds_target['so'] = model_salt_dataset['so']
-
-## TODO: This step may not be needed in MDTF?
-#ds_target = POD_utils.preprocess_coords(ds_target)
 
 # LOAD IN T/S OBS AND OMIP DATASET --------------------------------------------
 obsdir = os.environ["OBS_DATA"]

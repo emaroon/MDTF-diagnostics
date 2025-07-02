@@ -18,7 +18,7 @@ from matplotlib.colors import BoundaryNorm
 # Import Colors
 import matplotlib.colors as mcolors
 
-# We don't need warnings  # TODO: May want to change this or ignore specific warnings...
+# Warnings are hidden with the below code. Comment out if you want warnings.
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -173,7 +173,7 @@ def get_dlev(lev, lev_bnds, depth_limit=10000):
     elif (np.size(lev_bnds_lim.dims)==2):
         dlev = lev_bnds_lim.isel(bnds=1) - lev_bnds_lim.isel(bnds=0)
     elif (np.size(lev_bnds_lim.dims)==3):
-        print('using dz') # TODO: double check that we should use this rather than dim==1 version!
+        print('using dz')
         dlev = xr.DataArray(lev_bnds_lim[1:].values - lev_bnds_lim[0:-1].values) #,coords={'lev':lev})
     else:
         raise ValueError('ERROR: could not handle lev_bnds')
