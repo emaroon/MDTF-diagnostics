@@ -163,6 +163,8 @@ model_vol_dataset = xr.open_dataset(os.environ["VOLCELLO_FILE"])
 vol = model_vol_dataset[volcello_var]
 area = model_area_dataset[areacello_var]
 dz = vol/area
+# convert cm -> m
+dz = dz.assign_coords(lev=dz.lev / 100.0)
 
 # ---------------------------------------------------------------------
 
@@ -177,6 +179,7 @@ print('At Part 1: North Atlantic Bias Assessment')
 ### Data Ingest from Catalogue
 ds_target = model_temp_dataset
 ds_target['so'] = model_salt_dataset['so']
+ds_target = POD_utils.preprocess_coords(ds_target)
 
 # LOAD IN T/S OBS AND OMIP DATASET --------------------------------------------
 obsdir = os.environ["OBS_DATA"]

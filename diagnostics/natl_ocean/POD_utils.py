@@ -182,8 +182,9 @@ def get_dlev(lev, lev_bnds, depth_limit=10000):
 def check_depth_units(ds):
     if (ds['lev'].values.max() > 8000):
        ds['lev'] = (ds['lev']/100).assign_attrs({'units':'m'})
-    if (ds['lev_bnds'].values.max() > 8000):
-       ds['lev_bnds'] = (ds['lev_bnds']/100).assign_attrs({'units':'m'})   
+    if 'lev_bnds' in ds.variables:
+        if (ds['lev_bnds'].values.max() > 8000):
+            ds['lev_bnds'] = (ds['lev_bnds']/100).assign_attrs({'units':'m'})   
     return ds
 
 
@@ -203,18 +204,39 @@ def compute_zavg(ds, var, dz, depth=1000):
 
     # Slice the variable and weights to these levels
     data = ds[var].sel(lev=valid_levs)
-    dz_sel = dz.sel(lev=valid_levs)
+    dz_sel = dz.sel(lev=valid_levs, method='nearest', tolerance=1e-3)
 
     # Ensure dz is a DataArray and broadcastable
     if not isinstance(dz_sel, xr.DataArray):
         dz_sel = xr.DataArray(dz_sel, coords={'lev': valid_levs}, dims='lev')
 
-    # Broadcast dz to match data shape
-    dz_broadcast = dz_sel.broadcast_like(data)
+    # Case 1: dz is 1D (lev) → expand to match all data dims
+    if dz_sel.dims == ('lev',):
+        dz_broadcast = dz_sel
+        for dim in data.dims:
+            if dim != 'lev':
+                dz_broadcast = dz_broadcast.expand_dims({dim: data.sizes[dim]})
+        dz_broadcast = dz_broadcast.transpose(*data.dims)
 
-    # Debug prints if needed
-    # print(f"{var} shape before mean: {data.shape}")
-    # print(f"dz shape: {dz_broadcast.shape}")
+    # Case 2: dz has shape (lev, nlat, nlon) → expand time dim only
+    elif dz_sel.dims == ('lev', 'nlat', 'nlon'):
+        # Rename if needed
+        dz_sel = dz_sel.rename({'nlat': 'y', 'nlon': 'x'})  # Match to data.dims
+
+        # Then safely expand and transpose
+        dz_broadcast = dz_sel.expand_dims({'time': data.sizes['time']})
+        dz_broadcast = dz_broadcast.transpose(*data.dims)
+
+    # Case 3: dz already matches or is subset of data dims → fill missing dims
+    elif set(dz_sel.dims).issubset(set(data.dims)):
+        for dim in data.dims:
+            if dim not in dz_sel.dims:
+                dz_sel = dz_sel.expand_dims({dim: data.sizes[dim]})
+        dz_broadcast = dz_sel.transpose(*data.dims)
+
+    # Case 4: incompatible shape
+    else:
+        raise ValueError(f"dz has unexpected dimensions: {dz_sel.dims}, can't broadcast to data shape {data.shape}")
 
     # Do the weighted mean
     newvar = f"{var}_zavg"
