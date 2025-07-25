@@ -18,7 +18,7 @@ from matplotlib.colors import BoundaryNorm
 # Import Colors
 import matplotlib.colors as mcolors
 
-# We don't need warnings  # TODO: May want to change this or ignore specific warnings...
+# Warnings are hidden with the below code. Comment out if you want warnings
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -180,12 +180,27 @@ def get_dlev(lev, lev_bnds, depth_limit=10000):
     return dlev
 
 def check_depth_units(ds):
-    if (ds['lev'].values.max() > 8000):
-       ds['lev'] = (ds['lev']/100).assign_attrs({'units':'m'})
-    if (ds['lev_bnds'].values.max() > 8000):
-       ds['lev_bnds'] = (ds['lev_bnds']/100).assign_attrs({'units':'m'})   
-    return ds
+    # Convert lev if needed
+    if 'lev' in ds.coords:
+        lev = ds['lev']
+        if lev.max() > 8000:
+            print(f"Converting 'lev' from cm to m")
+            lev_converted = lev / 100
+            lev_converted.attrs.update(lev.attrs)
+            lev_converted.attrs['units'] = 'm'
+            ds = ds.assign_coords(lev=lev_converted)
 
+    # Convert lev_bnds if needed
+    if 'lev_bnds' in ds.variables:
+        lev_bnds = ds['lev_bnds']
+        if lev_bnds.max() > 8000:
+            print(f"Converting 'lev_bnds' from cm to m")
+            lev_bnds_converted = lev_bnds / 100
+            lev_bnds_converted.attrs.update(lev_bnds.attrs)
+            lev_bnds_converted.attrs['units'] = 'm'
+            ds['lev_bnds'] = lev_bnds_converted
+
+    return ds
 
 def compute_zavg(ds, var, dz, depth=1000):
     """
@@ -203,25 +218,14 @@ def compute_zavg(ds, var, dz, depth=1000):
 
     # Slice the variable and weights to these levels
     data = ds[var].sel(lev=valid_levs)
-    dz_sel = dz.sel(lev=valid_levs)
-
-    # Ensure dz is a DataArray and broadcastable
-    if not isinstance(dz_sel, xr.DataArray):
-        dz_sel = xr.DataArray(dz_sel, coords={'lev': valid_levs}, dims='lev')
-
-    # Broadcast dz to match data shape
-    dz_broadcast = dz_sel.broadcast_like(data)
-
-    # Debug prints if needed
-    # print(f"{var} shape before mean: {data.shape}")
-    # print(f"dz shape: {dz_broadcast.shape}")
+    dz_sel = dz.sel(lev=valid_levs, method='nearest', tolerance=1e-3).compute()
+    dz_sel = dz_sel.rename({'nlat': 'y', 'nlon': 'x'})
 
     # Do the weighted mean
     newvar = f"{var}_zavg"
-    result = data.weighted(dz_broadcast).mean('lev', keep_attrs=True).astype('float32')
 
     # Add to dataset and annotate
-    ds[newvar] = result
+    ds[newvar] = data.weighted(dz_sel).mean('lev', keep_attrs=True).astype('float32')
     ds[newvar].attrs['zavg'] = f'0-{depth}m'
     return ds
 
