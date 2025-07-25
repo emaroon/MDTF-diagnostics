@@ -18,7 +18,7 @@ from matplotlib.colors import BoundaryNorm
 # Import Colors
 import matplotlib.colors as mcolors
 
-# Warnings are hidden with the below code. Comment out if you want warnings.
+# Warnings are hidden with the below code. Comment out if you want warnings
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -173,20 +173,34 @@ def get_dlev(lev, lev_bnds, depth_limit=10000):
     elif (np.size(lev_bnds_lim.dims)==2):
         dlev = lev_bnds_lim.isel(bnds=1) - lev_bnds_lim.isel(bnds=0)
     elif (np.size(lev_bnds_lim.dims)==3):
-        print('using dz')
+        print('using dz') # TODO: double check that we should use this rather than dim==1 version!
         dlev = xr.DataArray(lev_bnds_lim[1:].values - lev_bnds_lim[0:-1].values) #,coords={'lev':lev})
     else:
         raise ValueError('ERROR: could not handle lev_bnds')
     return dlev
 
 def check_depth_units(ds):
-    if (ds['lev'].values.max() > 8000):
-       ds['lev'] = (ds['lev']/100).assign_attrs({'units':'m'})
-    if 'lev_bnds' in ds.variables:
-        if (ds['lev_bnds'].values.max() > 8000):
-            ds['lev_bnds'] = (ds['lev_bnds']/100).assign_attrs({'units':'m'})   
-    return ds
+    # Convert lev if needed
+    if 'lev' in ds.coords:
+        lev = ds['lev']
+        if lev.max() > 8000:
+            print(f"Converting 'lev' from cm to m")
+            lev_converted = lev / 100
+            lev_converted.attrs.update(lev.attrs)
+            lev_converted.attrs['units'] = 'm'
+            ds = ds.assign_coords(lev=lev_converted)
 
+    # Convert lev_bnds if needed
+    if 'lev_bnds' in ds.variables:
+        lev_bnds = ds['lev_bnds']
+        if lev_bnds.max() > 8000:
+            print(f"Converting 'lev_bnds' from cm to m")
+            lev_bnds_converted = lev_bnds / 100
+            lev_bnds_converted.attrs.update(lev_bnds.attrs)
+            lev_bnds_converted.attrs['units'] = 'm'
+            ds['lev_bnds'] = lev_bnds_converted
+
+    return ds
 
 def compute_zavg(ds, var, dz, depth=1000):
     """
@@ -204,46 +218,14 @@ def compute_zavg(ds, var, dz, depth=1000):
 
     # Slice the variable and weights to these levels
     data = ds[var].sel(lev=valid_levs)
-    dz_sel = dz.sel(lev=valid_levs, method='nearest', tolerance=1e-3)
-
-    # Ensure dz is a DataArray and broadcastable
-    if not isinstance(dz_sel, xr.DataArray):
-        dz_sel = xr.DataArray(dz_sel, coords={'lev': valid_levs}, dims='lev')
-
-    # Case 1: dz is 1D (lev) → expand to match all data dims
-    if dz_sel.dims == ('lev',):
-        dz_broadcast = dz_sel
-        for dim in data.dims:
-            if dim != 'lev':
-                dz_broadcast = dz_broadcast.expand_dims({dim: data.sizes[dim]})
-        dz_broadcast = dz_broadcast.transpose(*data.dims)
-
-    # Case 2: dz has shape (lev, nlat, nlon) → expand time dim only
-    elif dz_sel.dims == ('lev', 'nlat', 'nlon'):
-        # Rename if needed
-        dz_sel = dz_sel.rename({'nlat': 'y', 'nlon': 'x'})  # Match to data.dims
-
-        # Then safely expand and transpose
-        dz_broadcast = dz_sel.expand_dims({'time': data.sizes['time']})
-        dz_broadcast = dz_broadcast.transpose(*data.dims)
-
-    # Case 3: dz already matches or is subset of data dims → fill missing dims
-    elif set(dz_sel.dims).issubset(set(data.dims)):
-        for dim in data.dims:
-            if dim not in dz_sel.dims:
-                dz_sel = dz_sel.expand_dims({dim: data.sizes[dim]})
-        dz_broadcast = dz_sel.transpose(*data.dims)
-
-    # Case 4: incompatible shape
-    else:
-        raise ValueError(f"dz has unexpected dimensions: {dz_sel.dims}, can't broadcast to data shape {data.shape}")
+    dz_sel = dz.sel(lev=valid_levs, method='nearest', tolerance=1e-3).compute()
+    dz_sel = dz_sel.rename({'nlat': 'y', 'nlon': 'x'})
 
     # Do the weighted mean
     newvar = f"{var}_zavg"
-    result = data.weighted(dz_broadcast).mean('lev', keep_attrs=True).astype('float32')
 
     # Add to dataset and annotate
-    ds[newvar] = result
+    ds[newvar] = data.weighted(dz_sel).mean('lev', keep_attrs=True).astype('float32')
     ds[newvar].attrs['zavg'] = f'0-{depth}m'
     return ds
 

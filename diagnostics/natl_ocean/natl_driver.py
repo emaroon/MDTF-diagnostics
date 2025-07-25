@@ -68,8 +68,7 @@
 # 
 #   Here you should cite the journal articles providing the scientific basis for 
 #   your diagnostic.
-# 
-print('starting POD')
+print('Starting POD')
 
 # Import Packages
 import xarray as xr
@@ -79,9 +78,8 @@ import yaml
 import intake
 import POD_utils
 
+print('imported POD utils')
 # User Settings #########################################################
-# Shortname of model to be analyzed
-# model_name = 'CESM2 Hist'
 
 # Plot Lat/Lon Region
 plot_region = [360-90, 360-0, 20, 80]
@@ -163,8 +161,9 @@ model_vol_dataset = xr.open_dataset(os.environ["VOLCELLO_FILE"])
 vol = model_vol_dataset[volcello_var]
 area = model_area_dataset[areacello_var]
 dz = vol/area
-# convert cm -> m
-dz = dz.assign_coords(lev=dz.lev / 100.0)
+if "lev" not in dz.coords:
+    dz = dz.assign_coords(lev=model_vol_dataset["lev"])
+dz = dz.assign_coords(lev=dz.lev / 100.0)  # Convert to meters
 
 # ---------------------------------------------------------------------
 
@@ -176,10 +175,13 @@ outobs_dir = os.path.join(WORK_DIR, "obs")
 # PART 1: NORTH ATLANTIC BIAS ASSESSMENT ######################################
 
 print('At Part 1: North Atlantic Bias Assessment')
-### Data Ingest from Catalogue
+# Data Ingest from Catalogue
 ds_target = model_temp_dataset
 ds_target['so'] = model_salt_dataset['so']
 ds_target = POD_utils.preprocess_coords(ds_target)
+
+## TODO: This step may not be needed in MDTF?
+#ds_target = POD_utils.preprocess_coords(ds_target)
 
 # LOAD IN T/S OBS AND OMIP DATASET --------------------------------------------
 obsdir = os.environ["OBS_DATA"]
