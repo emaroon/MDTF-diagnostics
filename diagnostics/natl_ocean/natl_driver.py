@@ -68,6 +68,7 @@
 # 
 #   Here you should cite the journal articles providing the scientific basis for 
 #   your diagnostic.
+#
 print('Starting POD')
 
 # Import Packages
@@ -78,7 +79,6 @@ import yaml
 import intake
 import POD_utils
 
-print('imported POD utils')
 # User Settings #########################################################
 
 # Plot Lat/Lon Region
@@ -123,26 +123,7 @@ for case in case_list.values():
     else:
         print('vsf_var or wfo_var not found in case')
 
-# loading coords; this is currently written for multicase mode, but ignoring the other possible cases, 
-# because there's only one
-# TODO: change later to work for single case mode?
-time_coord = [case['time_coord'] for case in case_list.values()][0]
-lon_coord = [case['lon_coord'] for case in case_list.values()][0]
-lat_coord = [case['lat_coord'] for case in case_list.values()][0]
-lev_coord = [case['lev_coord'] for case in case_list.values()][0] 
-
-# method 1 for loading in variables: use the catalog (IDEAL) ----------
-# cat = intake.open_esm_datastore(cat_def_file)
-
-# print('This is the catalog', cat)
-
-## Temperature
-# temp_subset = cat.search(variable_id=temp_var, frequency="month")
-# temp_dict = temp_subset.to_dataset_dict(
-#     xarray_open_kwargs={"decode_times": True, "use_cftime": True}
-# )
-
-# method 2: load the file directly (slightly less ideal) ----------------
+# Load the files ------------------------------------------------------
 # ThetaO
 model_temp_dataset = xr.open_dataset(os.environ["THETAO_FILE"])
 
@@ -178,10 +159,8 @@ print('At Part 1: North Atlantic Bias Assessment')
 # Data Ingest from Catalogue
 ds_target = model_temp_dataset
 ds_target['so'] = model_salt_dataset['so']
-ds_target = POD_utils.preprocess_coords(ds_target)
 
-## TODO: This step may not be needed in MDTF?
-#ds_target = POD_utils.preprocess_coords(ds_target)
+ds_target = POD_utils.preprocess_coords(ds_target)
 
 # LOAD IN T/S OBS AND OMIP DATASET --------------------------------------------
 obsdir = os.environ["OBS_DATA"]
@@ -191,14 +170,16 @@ obsdir = os.environ["OBS_DATA"]
 omip_file = '/glade/work/brendanmy/S_Yeager/Sub2Sub/data_archive/POD_data/omip2.cycle1.1989_2018.mld_sic_t200_s200_sigma200.nc'
 # omip_file = omip_dir+'omip2.cycle1.1989_2018.mld_sic_t200_s200_sigma200.nc'
 ds_model = xr.open_dataset(omip_file).isel(OMIP=0).load()
+#ds_model = xr.open_dataset(omip_file).load()
 
 # Open Obs # TODO: this should probably just use the obsdir above but file not ingested yet!
 obs_path = '/glade/campaign/cgd/ccr/yeager/Sub2Sub/POD_data/obs_1x1.nc'
-ds_obs = xr.open_dataset(obs_path).load()
+#ds_obs = xr.open_dataset(obs_path).load()
+ds_obs = xr.open_dataset(obs_path).drop_vars(['sic']).load()
 # ds_obs = xr.open_dataset(obsdir+'obs_1x1.nc').load()
 
 # Time Subselection: Climatology is set to 1989-2018. Select closest match.
-climo_years = [1989, 2018]
+climo_years = [1980, 1982] # todo: should this just pull from config file?
 ds_target = ds_target.sel(time=slice(str(climo_years[0]),str(climo_years[1])))
 
 # CALCULATIONS ------------------------------------------------------------------
@@ -209,6 +190,8 @@ ds_target['mld'] = POD_utils.compute_mld(ds_target['sigma0'])
 # Compute Depth-average Fields (hard-wired for 200m-depth average)
 zavg_var_list = ['thetao', 'so', 'sigma0']
 for var in zavg_var_list:
+    if not isinstance(dz, xr.DataArray):
+        raise TypeError(f"Expected dz to be a DataArray, got {type(dz)}")
     ds_target = POD_utils.compute_zavg(ds_target, var, dz)
 
 # Drop 3D fields
@@ -218,12 +201,7 @@ ds_target = ds_target.drop_vars(['thetao','so','sigma0'])
 ds_target = POD_utils.regrid(ds_target, method='bilinear')
 
 # Compute climatology
-vars_to_group = ['mld', 'so_zavg', 'thetao_zavg','sigma0_zavg']
-monthly_ds = xr.Dataset()
-for var in vars_to_group:
-    monthly_ds[var] = ds_target[var].groupby('time.month').mean('time', keep_attrs=True)
-
-# ds_target = ds_target.groupby('time.month').mean('time', keep_attrs=True)  #TODO: removing this seems questionable!
+ds_target = ds_target.groupby('time.month').mean('time', keep_attrs=True)
 ds_target = ds_target.assign_coords({'model': model_name})
 
 # PLOTS -------------------------------------------------------------------------
@@ -232,8 +210,6 @@ ds_s200 = POD_utils.SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, 'so_zavg
 POD_utils.SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, 'sigma0_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
 POD_utils.SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, 'mld', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
 POD_utils.ScatterPlot_Error(ds_t200, 'thetao_zavg_bias', ds_s200, 'so_zavg_bias', model_name, save=savefig, savedir=outmod_dir)
-
-# SAVE FIGS -> HTML
 
 # PART 2: AMOC IN SIGMA COORDS #####################################################
 # LOAD IN OMIP AMOC(SIGMA)
