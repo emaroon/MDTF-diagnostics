@@ -105,6 +105,8 @@ with open(case_env_file, 'r') as stream:
 cat_def_file = case_info['CATALOG_FILE']
 case_list = case_info['CASE_LIST']
 model_name = list(case_list.keys())[0]
+start_year = case_list['CESM2_historical_r1i1p1f1']['startdate'].split('-')[0]
+end_year = case_list['CESM2_historical_r1i1p1f1']['enddate'].split('-')[0]
 
 # all cases share variable names and dimension coords in this example, so just get first result for each
 volcello_var = [case['volcello_var'] for case in case_list.values()][0]
@@ -174,13 +176,11 @@ ds_model = xr.open_dataset(omip_file).isel(OMIP=0).load()
 
 # Open Obs # TODO: this should probably just use the obsdir above but file not ingested yet!
 obs_path = '/glade/campaign/cgd/ccr/yeager/Sub2Sub/POD_data/obs_1x1.nc'
-#ds_obs = xr.open_dataset(obs_path).load()
-ds_obs = xr.open_dataset(obs_path).drop_vars(['sic']).load()
+ds_obs = xr.open_dataset(obs_path).load()
 # ds_obs = xr.open_dataset(obsdir+'obs_1x1.nc').load()
 
-# Time Subselection: Climatology is set to 1989-2018. Select closest match.
-climo_years = [1980, 1982] # todo: should this just pull from config file?
-ds_target = ds_target.sel(time=slice(str(climo_years[0]),str(climo_years[1])))
+# Time Subselection:
+ds_target = ds_target.sel(time=slice(start_year, end_year))
 
 # CALCULATIONS ------------------------------------------------------------------
 # Compute Sigma0 and MLD 
