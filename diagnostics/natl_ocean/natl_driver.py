@@ -1,7 +1,7 @@
 # North Atlantic Diagnostics POD Driver
 # Last update: 6/30/2025
 #   Version & Contact info
-#   - Version/revision information: version 1 (6/3/2025)
+#   - Version/revision information: version 1 (7/30/2025)
 #   - PIs: Liz Maroon, University of Wisconsin, emaroon@wisc.edu
 #          Steve Yeager, NSF National Center for Atmospheric Resarch, yeager@ucar.edu
 #   - Developer/point of contact: Liz Maroon, University of Wisconsin, emaroon@wisc.edu
@@ -68,20 +68,16 @@
 # 
 #   Here you should cite the journal articles providing the scientific basis for 
 #   your diagnostic.
-# 
-print('starting POD')
 
 # Import Packages
 import xarray as xr
-import matplotlib.pyplot as plt
 import os
 import yaml
-import intake
 import POD_utils
 
+print('Starting North Atlantic Ocean POD')
+
 # User Settings #########################################################
-# Shortname of model to be analyzed
-model_name = 'CESM2 Hist'
 
 # Plot Lat/Lon Region
 plot_region = [360-90, 360-0, 20, 80]
@@ -106,6 +102,9 @@ with open(case_env_file, 'r') as stream:
 
 cat_def_file = case_info['CATALOG_FILE']
 case_list = case_info['CASE_LIST']
+model_name = list(case_list.keys())[0]
+start_year = case_list['CESM2_historical_r1i1p1f1']['startdate'].split('-')[0]
+end_year = case_list['CESM2_historical_r1i1p1f1']['enddate'].split('-')[0]
 
 # all cases share variable names and dimension coords in this example, so just get first result for each
 volcello_var = [case['volcello_var'] for case in case_list.values()][0]
@@ -124,26 +123,7 @@ for case in case_list.values():
     else:
         print('vsf_var or wfo_var not found in case')
 
-# loading coords; this is currently written for multicase mode, but ignoring the other possible cases, 
-# because there's only one
-# TODO: change later to work for single case mode?
-time_coord = [case['time_coord'] for case in case_list.values()][0]
-lon_coord = [case['lon_coord'] for case in case_list.values()][0]
-lat_coord = [case['lat_coord'] for case in case_list.values()][0]
-lev_coord = [case['lev_coord'] for case in case_list.values()][0] 
-
-# method 1 for loading in variables: use the catalog (IDEAL) ----------
-# cat = intake.open_esm_datastore(cat_def_file)
-
-# print('This is the catalog', cat)
-
-## Temperature
-# temp_subset = cat.search(variable_id=temp_var, frequency="month")
-# temp_dict = temp_subset.to_dataset_dict(
-#     xarray_open_kwargs={"decode_times": True, "use_cftime": True}
-# )
-
-# method 2: load the file directly (slightly less ideal) ----------------
+# Load the files ------------------------------------------------------
 # ThetaO
 model_temp_dataset = xr.open_dataset(os.environ["THETAO_FILE"])
 
@@ -162,6 +142,9 @@ model_vol_dataset = xr.open_dataset(os.environ["VOLCELLO_FILE"])
 vol = model_vol_dataset[volcello_var]
 area = model_area_dataset[areacello_var]
 dz = vol/area
+if "lev" not in dz.coords:
+    dz = dz.assign_coords(lev=model_vol_dataset["lev"])
+dz = dz.assign_coords(lev=dz.lev / 100.0)  # Convert to meters
 
 # ---------------------------------------------------------------------
 
@@ -173,18 +156,13 @@ outobs_dir = os.path.join(WORK_DIR, "obs")
 # PART 1: NORTH ATLANTIC BIAS ASSESSMENT ######################################
 
 print('At Part 1: North Atlantic Bias Assessment')
-### DATA INGEST FROM NOTEBOOK: # TODO: Replace with catalog portion and/or create a new file!
-#ds_target = xr.open_dataset('/glade/collections/cmip/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Omon/thetao/gn/v20190308/thetao_Omon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc')
-#ds_salt = xr.open_dataset('/glade/collections/cmip/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Omon/so/gn/v20190308/so_Omon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc')
-# ds_target['so'] = ds_salt['so']
-# WE WANT TO USE THIS INSTEAD!
+# Data Ingest from Catalogue
 ds_target = model_temp_dataset
 ds_target['so'] = model_salt_dataset['so']
 
-## TODO: This step may not be needed in MDTF?
-#ds_target = POD_utils.preprocess_coords(ds_target)
+ds_target = POD_utils.preprocess_coords(ds_target)
 
-# LOAD IN T/S OBS AND OMIP DATASET --------------------------------------------
+# LOAD IN T/S OBS AND OMIP DATASET ---------------------------------------------
 obsdir = os.environ["OBS_DATA"]
 # omip_dir = os.environ["OMIP_DATA"]
 
@@ -192,17 +170,17 @@ obsdir = os.environ["OBS_DATA"]
 omip_file = '/glade/work/brendanmy/S_Yeager/Sub2Sub/data_archive/POD_data/omip2.cycle1.1989_2018.mld_sic_t200_s200_sigma200.nc'
 # omip_file = omip_dir+'omip2.cycle1.1989_2018.mld_sic_t200_s200_sigma200.nc'
 ds_model = xr.open_dataset(omip_file).isel(OMIP=0).load()
+#ds_model = xr.open_dataset(omip_file).load()
 
 # Open Obs # TODO: this should probably just use the obsdir above but file not ingested yet!
 obs_path = '/glade/campaign/cgd/ccr/yeager/Sub2Sub/POD_data/obs_1x1.nc'
 ds_obs = xr.open_dataset(obs_path).load()
 # ds_obs = xr.open_dataset(obsdir+'obs_1x1.nc').load()
 
-# Time Subselection: Climatology is set to 1989-2018. Select closest match.
-climo_years = [1980, 1981]
-ds_target = ds_target.sel(time=slice(str(climo_years[0]),str(climo_years[1])))
+# Time Subselection:
+ds_target = ds_target.sel(time=slice(start_year, end_year))
 
-# CALCULATIONS ------------------------------------------------------------------
+# PERFORM CALCULATIONS --------------------------------------------------------
 # Compute Sigma0 and MLD 
 ds_target['sigma0'] = POD_utils.compute_sigma0(ds_target['thetao'], ds_target['so'])
 ds_target['mld'] = POD_utils.compute_mld(ds_target['sigma0'])
@@ -210,6 +188,8 @@ ds_target['mld'] = POD_utils.compute_mld(ds_target['sigma0'])
 # Compute Depth-average Fields (hard-wired for 200m-depth average)
 zavg_var_list = ['thetao', 'so', 'sigma0']
 for var in zavg_var_list:
+    if not isinstance(dz, xr.DataArray):
+        raise TypeError(f"Expected dz to be a DataArray, got {type(dz)}")
     ds_target = POD_utils.compute_zavg(ds_target, var, dz)
 
 # Drop 3D fields
@@ -219,50 +199,15 @@ ds_target = ds_target.drop_vars(['thetao','so','sigma0'])
 ds_target = POD_utils.regrid(ds_target, method='bilinear')
 
 # Compute climatology
-vars_to_group = ['mld', 'so_zavg', 'thetao_zavg','sigma0_zavg']
-monthly_ds = xr.Dataset()
-for var in vars_to_group:
-    monthly_ds[var] = ds_target[var].groupby('time.month').mean('time', keep_attrs=True)
-
-# ds_target = ds_target.groupby('time.month').mean('time', keep_attrs=True)  #TODO: removing this seems questionable!
+ds_target = ds_target.groupby('time.month').mean('time', keep_attrs=True)
 ds_target = ds_target.assign_coords({'model': model_name})
 
-# PLOTS -------------------------------------------------------------------------
+# CREATE PLOTS ---------------------------------------------------------------------
 ds_t200 = POD_utils.SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, 'thetao_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
 ds_s200 = POD_utils.SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, 'so_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
 POD_utils.SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, 'sigma0_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
 POD_utils.SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, 'mld', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
 POD_utils.ScatterPlot_Error(ds_t200, 'thetao_zavg_bias', ds_s200, 'so_zavg_bias', model_name, save=savefig, savedir=outmod_dir)
-
-# SAVE FIGS -> HTML
-
-# PART 2: AMOC IN SIGMA COORDS #####################################################
-# LOAD IN OMIP AMOC(SIGMA)
-# ds_omip_amoc = xr.open_dataset(obsdir+'amoc.nc')
-
-# CALCULATIONS
-# CALLING MOC FUNCTIONS FROM PY SCRIPT
-
-# PLOTS
-# AMOC IN SIGMA
-# AMOC IN Z (If TIME)
-# AMOC at 45 Line Plot
-
-# SAVE FIGS -> HTML
-
-# PART 3: SURFACE-FORCED WATER MASS TRANSFORMATION ###############################
-# LOAD IN WMT BENCHMARKS
-
-# CALCULATIONS
-
-# PLOTS
-# WMT BY REGION
-# WMT(45N+) WITH AMOC(SIGMA)
-
-# SAVE FIGS -> HTML
-
-# PART 4: SYNTHESIS ##############################################################
-
 
 # Wrap-up by closing datasets that have been opened and informing user of successful completion
 model_temp_dataset.close()
@@ -270,5 +215,37 @@ model_salt_dataset.close()
 model_hfds_dataset.close()
 model_area_dataset.close()
 ds_target.close()
+print('North Atlantic Ocean POD Part 1: North Atlantic Bias Assessment finished successfully!')
+
+# PART 2: AMOC IN SIGMA COORDS #####################################################
+# LOAD IN OMIP AMOC(SIGMA)
+# ds_omip_amoc = xr.open_dataset(obsdir+'amoc.nc')
+
+# PERFORM CALCULATIONS -----------------------------------------------------------
+# CALLING MOC FUNCTIONS FROM PY SCRIPT
+
+# CREATE PLOTS -------------------------------------------------------------------
+# AMOC IN SIGMA
+# AMOC IN Z (If TIME)
+# AMOC at 45 Line Plot
+
+# SAVE FIGS -> HTML
+# Wrap-up by closing datasets that have been opened and informing user of successful completion
+# print('North Atlantic Ocean POD Part 2: AMOC finished successfully!')
+
+# PART 3: SURFACE-FORCED WATER MASS TRANSFORMATION ###############################
+# LOAD IN WMT BENCHMARKS
+
+# PERFORM CALCULATIONS -----------------------------------------------------------
+
+# CREATE PLOTS -------------------------------------------------------------------
+# WMT BY REGION
+# WMT(45N+) WITH AMOC(SIGMA)
+
+# SAVE FIGS -> HTML
+# print('North Atlantic Ocean POD Part 3: Surface-Forced Water Mass Transformation finished successfully!')
+
+# PART 4: SYNTHESIS ##############################################################
+# Wrap-up by closing datasets that have been opened and informing user of successful completion
 
 print("North Atlantic Ocean POD finished successfully!")
