@@ -1,7 +1,7 @@
 # North Atlantic Diagnostics POD Driver
 # Last update: 6/30/2025
 #   Version & Contact info
-#   - Version/revision information: version 1 (6/3/2025)
+#   - Version/revision information: version 1 (7/30/2025)
 #   - PIs: Liz Maroon, University of Wisconsin, emaroon@wisc.edu
 #          Steve Yeager, NSF National Center for Atmospheric Resarch, yeager@ucar.edu
 #   - Developer/point of contact: Liz Maroon, University of Wisconsin, emaroon@wisc.edu
@@ -68,16 +68,14 @@
 # 
 #   Here you should cite the journal articles providing the scientific basis for 
 #   your diagnostic.
-#
-print('Starting POD')
 
 # Import Packages
 import xarray as xr
-import matplotlib.pyplot as plt
 import os
 import yaml
-import intake
 import POD_utils
+
+print('Starting North Atlantic Ocean POD')
 
 # User Settings #########################################################
 
@@ -164,7 +162,7 @@ ds_target['so'] = model_salt_dataset['so']
 
 ds_target = POD_utils.preprocess_coords(ds_target)
 
-# LOAD IN T/S OBS AND OMIP DATASET --------------------------------------------
+# LOAD IN T/S OBS AND OMIP DATASET ---------------------------------------------
 obsdir = os.environ["OBS_DATA"]
 # omip_dir = os.environ["OMIP_DATA"]
 
@@ -182,7 +180,7 @@ ds_obs = xr.open_dataset(obs_path).load()
 # Time Subselection:
 ds_target = ds_target.sel(time=slice(start_year, end_year))
 
-# CALCULATIONS ------------------------------------------------------------------
+# PERFORM CALCULATIONS --------------------------------------------------------
 # Compute Sigma0 and MLD 
 ds_target['sigma0'] = POD_utils.compute_sigma0(ds_target['thetao'], ds_target['so'])
 ds_target['mld'] = POD_utils.compute_mld(ds_target['sigma0'])
@@ -204,40 +202,12 @@ ds_target = POD_utils.regrid(ds_target, method='bilinear')
 ds_target = ds_target.groupby('time.month').mean('time', keep_attrs=True)
 ds_target = ds_target.assign_coords({'model': model_name})
 
-# PLOTS -------------------------------------------------------------------------
+# CREATE PLOTS ---------------------------------------------------------------------
 ds_t200 = POD_utils.SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, 'thetao_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
 ds_s200 = POD_utils.SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, 'so_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
 POD_utils.SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, 'sigma0_zavg', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
 POD_utils.SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, 'mld', region=plot_region, focus_region=focus_region, month=month, save=savefig, savedir=outmod_dir)
 POD_utils.ScatterPlot_Error(ds_t200, 'thetao_zavg_bias', ds_s200, 'so_zavg_bias', model_name, save=savefig, savedir=outmod_dir)
-
-# PART 2: AMOC IN SIGMA COORDS #####################################################
-# LOAD IN OMIP AMOC(SIGMA)
-# ds_omip_amoc = xr.open_dataset(obsdir+'amoc.nc')
-
-# CALCULATIONS
-# CALLING MOC FUNCTIONS FROM PY SCRIPT
-
-# PLOTS
-# AMOC IN SIGMA
-# AMOC IN Z (If TIME)
-# AMOC at 45 Line Plot
-
-# SAVE FIGS -> HTML
-
-# PART 3: SURFACE-FORCED WATER MASS TRANSFORMATION ###############################
-# LOAD IN WMT BENCHMARKS
-
-# CALCULATIONS
-
-# PLOTS
-# WMT BY REGION
-# WMT(45N+) WITH AMOC(SIGMA)
-
-# SAVE FIGS -> HTML
-
-# PART 4: SYNTHESIS ##############################################################
-
 
 # Wrap-up by closing datasets that have been opened and informing user of successful completion
 model_temp_dataset.close()
@@ -245,5 +215,37 @@ model_salt_dataset.close()
 model_hfds_dataset.close()
 model_area_dataset.close()
 ds_target.close()
+print('North Atlantic Ocean POD Part 1: North Atlantic Bias Assessment finished successfully!')
+
+# PART 2: AMOC IN SIGMA COORDS #####################################################
+# LOAD IN OMIP AMOC(SIGMA)
+# ds_omip_amoc = xr.open_dataset(obsdir+'amoc.nc')
+
+# PERFORM CALCULATIONS -----------------------------------------------------------
+# CALLING MOC FUNCTIONS FROM PY SCRIPT
+
+# CREATE PLOTS -------------------------------------------------------------------
+# AMOC IN SIGMA
+# AMOC IN Z (If TIME)
+# AMOC at 45 Line Plot
+
+# SAVE FIGS -> HTML
+# Wrap-up by closing datasets that have been opened and informing user of successful completion
+# print('North Atlantic Ocean POD Part 2: AMOC finished successfully!')
+
+# PART 3: SURFACE-FORCED WATER MASS TRANSFORMATION ###############################
+# LOAD IN WMT BENCHMARKS
+
+# PERFORM CALCULATIONS -----------------------------------------------------------
+
+# CREATE PLOTS -------------------------------------------------------------------
+# WMT BY REGION
+# WMT(45N+) WITH AMOC(SIGMA)
+
+# SAVE FIGS -> HTML
+# print('North Atlantic Ocean POD Part 3: Surface-Forced Water Mass Transformation finished successfully!')
+
+# PART 4: SYNTHESIS ##############################################################
+# Wrap-up by closing datasets that have been opened and informing user of successful completion
 
 print("North Atlantic Ocean POD finished successfully!")
