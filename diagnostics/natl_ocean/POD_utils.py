@@ -18,7 +18,7 @@ from matplotlib.colors import BoundaryNorm
 # Import Colors
 import matplotlib.colors as mcolors
 
-# We don't need warnings  # TODO: May want to change this or ignore specific warnings...
+# Warnings are hidden with the below code. Comment out if you want warnings
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -173,27 +173,38 @@ def get_dlev(lev, lev_bnds, depth_limit=10000):
     elif (np.size(lev_bnds_lim.dims)==2):
         dlev = lev_bnds_lim.isel(bnds=1) - lev_bnds_lim.isel(bnds=0)
     elif (np.size(lev_bnds_lim.dims)==3):
-        print('using dz') # TODO: double check that we should use this rather than dim==1 version!
         dlev = xr.DataArray(lev_bnds_lim[1:].values - lev_bnds_lim[0:-1].values) #,coords={'lev':lev})
     else:
         raise ValueError('ERROR: could not handle lev_bnds')
     return dlev
 
 def check_depth_units(ds):
-    if (ds['lev'].values.max() > 8000):
-       ds['lev'] = (ds['lev']/100).assign_attrs({'units':'m'})
-    if (ds['lev_bnds'].values.max() > 8000):
-       ds['lev_bnds'] = (ds['lev_bnds']/100).assign_attrs({'units':'m'})   
+    # Convert lev if needed
+    if 'lev' in ds.coords:
+        lev = ds['lev']
+        if lev.max() > 8000:
+            lev_converted = lev / 100
+            lev_converted.attrs.update(lev.attrs)
+            lev_converted.attrs['units'] = 'm'
+            ds = ds.assign_coords(lev=lev_converted)
+
+    # Convert lev_bnds if needed
+    if 'lev_bnds' in ds.variables:
+        lev_bnds = ds['lev_bnds']
+        if lev_bnds.max() > 8000:
+            lev_bnds_converted = lev_bnds / 100
+            lev_bnds_converted.attrs.update(lev_bnds.attrs)
+            lev_bnds_converted.attrs['units'] = 'm'
+            ds['lev_bnds'] = lev_bnds_converted
+
     return ds
 
-
-def compute_zavg(ds, var, dz, depth=1000):
+def compute_zavg(ds, var, dz, depth=200):
     """
     Compute thickness-weighted mean over depth for field.
     """
     # Ensure lev is available
     lev = ds['lev']
-
     # Find valid levels shallower than depth
     valid_mask = lev <= depth
     valid_levs = lev.where(valid_mask, drop=True)
@@ -204,25 +215,15 @@ def compute_zavg(ds, var, dz, depth=1000):
     # Slice the variable and weights to these levels
     data = ds[var].sel(lev=valid_levs)
     dz_sel = dz.sel(lev=valid_levs)
-
-    # Ensure dz is a DataArray and broadcastable
-    if not isinstance(dz_sel, xr.DataArray):
-        dz_sel = xr.DataArray(dz_sel, coords={'lev': valid_levs}, dims='lev')
-
-    # Broadcast dz to match data shape
-    dz_broadcast = dz_sel.broadcast_like(data)
-
-    # Debug prints if needed
-    # print(f"{var} shape before mean: {data.shape}")
-    # print(f"dz shape: {dz_broadcast.shape}")
+    dz_sel = dz_sel.rename({'nlat': 'y', 'nlon': 'x'})
 
     # Do the weighted mean
     newvar = f"{var}_zavg"
-    result = data.weighted(dz_broadcast).mean('lev', keep_attrs=True).astype('float32')
 
     # Add to dataset and annotate
-    ds[newvar] = result
+    ds[newvar] = data.weighted(dz_sel).mean('lev', keep_attrs=True).astype('float32')
     ds[newvar].attrs['zavg'] = f'0-{depth}m'
+
     return ds
 
 
@@ -341,7 +342,6 @@ def get_varname(var):
 def SpatialBias_panel(da, stats, focus_region, focus_model, ax):
     var = da.name
     var_name = get_varname(var)
-#    from matplotlib.colors import BoundaryNorm
     da_model = da.sel(model=focus_model)  #Create DataArray of the target model alone
     rmse_model = stats[var+'_rmse'].sel(model=focus_model).values
     bias_model = stats[var+'_bias'].sel(model=focus_model).values
@@ -432,7 +432,6 @@ def SpatialRank_panel(da, focus_region, focus_model, ax):
 
     # Plot
     cntr1 = ax.pcolormesh(rank_da['lon'], rank_da['lat'], rank_da, shading='nearest', cmap=cmap, norm=norm, rasterized=True, transform=proj)
-    
     cbar = plt.colorbar(cntr1, ax=ax, orientation='vertical', spacing='proportional', pad=0.01)
     cbar.set_label(label='%', size=font_label, rotation=270, labelpad=5)
     cbar.ax.tick_params(labelsize=font_tick)
