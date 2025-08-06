@@ -124,7 +124,6 @@ for case in case_list.values():
         print('vsf_var or wfo_var not found in case')
 
 # Load the files ------------------------------------------------------
-
 time_coord = [case['time_coord'] for case in case_list.values()][0]
 lon_coord = [case['lon_coord'] for case in case_list.values()][0]
 lat_coord = [case['lat_coord'] for case in case_list.values()][0]
@@ -133,16 +132,13 @@ lev_coord = [case['lev_coord'] for case in case_list.values()][0]
 # ThetaO
 model_temp_dataset = xr.open_dataset(os.environ["THETAO_FILE"])
 
+# Salt
+model_salt_dataset = xr.open_dataset(os.environ["SO_FILE"])
+
 # SHF
 model_hfds_dataset = xr.open_dataset(os.environ["HFDS_FILE"])
 
 # TArea
-model_area_dataset = xr.open_dataset(os.environ["AREACELLO_FILE"])
-
-#SALT
-model_salt_dataset = xr.open_dataset(os.environ["SO_FILE"])
-
-#TAREA
 model_area_dataset = xr.open_dataset(os.environ["AREACELLO_FILE"])
 
 #VOLUME
@@ -156,6 +152,7 @@ if "lev" not in dz.coords:
 dz = dz.assign_coords(lev=dz.lev / 100.0)  # Convert to meters
 
 # ---------------------------------------------------------------------
+
 
 # set directories
 WORK_DIR = os.environ['WORK_DIR']
