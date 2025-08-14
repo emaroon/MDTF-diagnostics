@@ -2,10 +2,10 @@
 # Last update: 6/30/2025
 #   Version & Contact info
 #   - Version/revision information: version 1 (7/30/2025)
-#   - PIs: Liz Maroon, University of Wisconsin, emaroon@wisc.edu
+#   - PIs: Elizabeth Maroon, University of Wisconsin-Madison, emaroon@wisc.edu
 #          Steve Yeager, NSF National Center for Atmospheric Resarch, yeager@ucar.edu
-#   - Developer/point of contact: Liz Maroon, University of Wisconsin, emaroon@wisc.edu
-#   - Other contributors: Taydra Low, Brendan Myers, Teagan King
+#   - Developer/point of contact: Elizabeth Maroon, University of Wisconsin-Madison, emaroon@wisc.edu
+#   - Other contributors: Taydra Low, Brendan Myers, Teagan King, Feng Zhu
 # 
 #   Open source copyright agreement
 # 
@@ -71,6 +71,7 @@
 
 # Import Packages
 import xarray as xr
+import dask
 import os
 import yaml
 import POD_utils
@@ -117,16 +118,22 @@ for case in case_list.values():
     if 'vsf_var' in case:
         vsf_var = [case['vsf_var'] for case in case_list.values()][0]
         wfo_mod = False
+        fw_var = vsf_var
     elif 'wfo_var' in case:
         wfo_var = [case['wfo_var'] for case in case_list.values()][0]
         wfo_mod = True
+        fw_var = wfo_var
     else:
-        print('vsf_var or wfo_var not found in case')
+        print('vsf_var or wfo_var not found in case, ERROR likely') ##TO-DO: Find way to make ERROR here
 
 # Load the files ------------------------------------------------------
+
+for case in case_list.values():
+    print(case)
+
 time_coord = [case['time_coord'] for case in case_list.values()][0]
-lon_coord = [case['lon_coord'] for case in case_list.values()][0]
-lat_coord = [case['lat_coord'] for case in case_list.values()][0]
+lon_coord = [case['nlon_coord'] for case in case_list.values()][0]
+lat_coord = [case['nlat_coord'] for case in case_list.values()][0]
 lev_coord = [case['lev_coord'] for case in case_list.values()][0] 
 
 # ThetaO
@@ -137,6 +144,12 @@ model_salt_dataset = xr.open_dataset(os.environ["SO_FILE"])
 
 # SHF
 model_hfds_dataset = xr.open_dataset(os.environ["HFDS_FILE"])
+
+# FW
+if wfo_mod:
+    model_fw_dataset = xr.open_dataset(os.environ["WFO_FILE"])
+elif wfo_mod==False:
+    model_fw_dataset = xr.open_dataset(os.environ["VSF_FILE"]) 
 
 # TArea
 model_area_dataset = xr.open_dataset(os.environ["AREACELLO_FILE"])
@@ -164,7 +177,7 @@ outobs_dir = os.path.join(WORK_DIR, "obs")
 print('At Part 1: North Atlantic Bias Assessment')
 # Data Ingest from Catalogue
 ds_target = model_temp_dataset
-ds_target['so'] = model_salt_dataset['so']
+ds_target[salt_var] = model_salt_dataset[salt_var]
 
 ds_target = POD_utils.preprocess_coords(ds_target)
 
@@ -218,11 +231,11 @@ POD_utils.SpatialPlot_climo_bias(ds_target, ds_model, ds_obs, 'mld', region=plot
 POD_utils.ScatterPlot_Error(ds_t200, 'thetao_zavg_bias', ds_s200, 'so_zavg_bias', model_name, save=savefig, savedir=outmod_dir)
 
 # Wrap-up by closing datasets that have been opened and informing user of successful completion
-model_temp_dataset.close()
-model_salt_dataset.close()
-model_hfds_dataset.close()
-model_area_dataset.close()
-ds_target.close()
+#model_temp_dataset.close()
+#model_salt_dataset.close()
+#model_hfds_dataset.close()
+#model_area_dataset.close()
+#ds_target.close()
 print('North Atlantic Ocean POD Part 1: North Atlantic Bias Assessment finished successfully!')
 
 # PART 2: AMOC IN SIGMA COORDS #####################################################
@@ -244,14 +257,38 @@ print('North Atlantic Ocean POD Part 1: North Atlantic Bias Assessment finished 
 # PART 3: SURFACE-FORCED WATER MASS TRANSFORMATION ###############################
 # LOAD IN WMT BENCHMARKS
 
-# PERFORM CALCULATIONS -----------------------------------------------------------
+#Loading in pre-computed total WMT from benchmarks
+ds_wmt_benchmarks = xr.open_dataset(obsdir+'/obs_wmt_sigma2_1982-2009_spna_decomp_mean.nc')
+
+#Putting together dataset object for WMT calculations
+ds_target = model_temp_dataset.isel({lev_coord:0}).drop([lev_coord])
+ds_target[salt_var] = model_salt_dataset[salt_var].isel({lev_coord:0}).drop([lev_coord])
+ds_target[hfds_var] = model_hfds_dataset[hfds_var] 
+ds_target[fw_var] = model_fw_dataset[fw_var]
+ds_target[areacello_var] = area
+ds_target = ds_target.rename({temp_var:'tos', salt_var:'sos',lat_coord:'y', lon_coord:'x'})
+
+# Rechunking for efficiency. Set for 1x1 size model
+ds_target = ds_target.unify_chunks()
+ds_target = ds_target.chunk({'y':-1, 'x':-1, 'time': 20})
+
+# PERFORM MODEL CALCULATIONS -----------------------------------------------------------
+ds_wmt_lines = POD_utils.compute_wmt(ds_target, 'WMT', 'sigma2', regrid=False) 
+ds_wmt_lines = ds_wmt_lines.mean(time_coord)
+
 
 # CREATE PLOTS -------------------------------------------------------------------
 # WMT BY REGION
+POD_utils.wmt_plot_byregion(ds_wmt_benchmarks, ds_wmt_lines, save=True, savedir=outmod_dir)
+
+
+# WMT MAPS AT A FEW SIGMA CLASSES
+
+
 # WMT(45N+) WITH AMOC(SIGMA)
 
 # SAVE FIGS -> HTML
-# print('North Atlantic Ocean POD Part 3: Surface-Forced Water Mass Transformation finished successfully!')
+print('North Atlantic Ocean POD Part 3: Surface-Forced Water Mass Transformation finished successfully!')
 
 # PART 4: SYNTHESIS ##############################################################
 # Wrap-up by closing datasets that have been opened and informing user of successful completion

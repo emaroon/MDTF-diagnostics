@@ -6,6 +6,7 @@ from scipy import stats
 import gsw_xarray as gsw
 from numba import guvectorize
 import cftime
+import xwmt
 
 # Import Plotting Tools
 import cartopy.crs as ccrs
@@ -22,7 +23,10 @@ import matplotlib.colors as mcolors
 import warnings
 warnings.filterwarnings('ignore')
 
-##### PROCESSING  #####
+# Import additional utilities
+import spna_masks
+
+##### PART 1 PROCESSING  #####
 def preprocess_coords(ds):
     rename_coords_dict = {
         'd2': 'bnds',
@@ -314,7 +318,7 @@ def forcing_cycles(expid,nt):
     return ncyc,yearrange
 
 
-##### PLOTTING #####
+##### PART 1 PLOTTING #####
 def blue2red_cmap(n):
     """ combine two existing color maps to create a diverging color map with white in the middle
     n = the number of contour intervals
@@ -626,3 +630,300 @@ def ScatterPlot_Error(ds_x, var_x, ds_y, var_y, focus_model, save=False, savedir
         fig.savefig(plotname)
 
     return 
+
+
+
+#### PART 3 CALCULATION
+
+
+def compute_wmt(ds, calc_type, density, regrid=False, verbose=True):
+    """
+    Computes water mass transformation in the subpolar North Atlantic and optionally regrids to 1x1 grid.
+     
+    Parameters:
+    ds: xarray.Dataset
+         Dataset with fields necessary for WMT calculation (TEMP, SALT, WFO/VSF, HFDS)
+    calc_type: string
+         Keyword with the type of calculation to perform
+         - WMT: line plots of WMT vs sigma
+         - MAPS: transformation in sigma decomposed also by location
+         - DENS: ??  
+         - DS:  ??
+    density: string
+         Keyword with sigma variable to use (i.e., sigma2 or sigma0)
+         sigma2 implemented in the POD for comparison to AMOC(sigma2)
+    regrid: boolean, optional
+         Regrids to regular 1x1 grid 
+    verbose: boolean, optional
+
+    Returns:
+    xarray.Dataset
+        Dataset with water mass transformation in SPNA regions. 
+    """
+    if calc_type == 'WMT':
+        ds_wmt = calc_wmt(ds, density)
+    if calc_type == 'MAPS':
+        ds_wmt = calc_maps(ds, density)
+    if calc_type == 'DENS':
+        ds_wmt = calc_dens(ds, density)
+    if calc_type == 'DS':
+        ds_wmt = make_ds(ds)
+
+    if regrid:
+        dlon=1
+        dlat=1
+        method ='bilinear'
+        target = xe.util.grid_global(dlon, dlat, cf=True, lon1=360)
+        ds_wmt = utils.regrid(ds_wmt, target=target, method=method)
+  
+    return ds_wmt
+
+
+def make_spna_masks(ds):
+    """
+    Makes masks of subpolar North Atlantic subregions 
+
+    Parameters:
+    ds: xarray.Dataset
+        Dataset that includes lon and lat needed to determine region bounds
+
+    Returns:
+    xarray.Dataset
+        Dataset with region masks applied
+
+    """
+    dbasins = spna_masks.spna_masks()
+    lon_raw = ds['lon']  # TO-DO may need un-hardcoding
+    lat = ds['lat']  #TO-DO may need un-hardcoding
+    lon = xr.where(lon_raw < -180, lon_raw + 360.0, lon_raw)
+    #having the wraparound point in atlantic breaks masks for some reason
+    lon = xr.where(lon > 180, lon-360.0, lon)
+    #fix for 1-d lat/lon
+    if len(lon.dims)<2:
+        lonlon, latlat =np.meshgrid(lon,lat)
+        reg_mask = dbasins.mask(lonlon, latlat)
+    else:
+        reg_mask = dbasins.mask(lon, lat)
+    lab = ds.where(reg_mask == 1)
+    spg_sw = ds.where(reg_mask == 2)
+    spg_se = ds.where(reg_mask == 3)
+    irm = ds.where(reg_mask == 4)
+    nor = ds.where(reg_mask == 5)
+    arc = ds.where(reg_mask == 6)
+    spna = ds.where(reg_mask < 6)
+    ds_mask = xr.concat([lab,spg_sw,spg_se,irm,nor,arc,spna], 'region')
+    regions = ['Labrador Sea','Subpolar Gyre SW', 'Subpolar Gyre SE', 'Irminger-Icelandic Sea',
+                   'Nordic Seas', 'Arctic Sea', 'Subpolar North Atlantic']
+    ds_mask = ds_mask.assign_coords({'region':regions})
+
+    return ds_mask
+
+def wmt_preproc(ds):
+    """
+    Preprocessing of Dataset for xwmt functions
+
+    Parameters: 
+    ds: xarray.Dataset
+        Dataset that includes all fields needed for WMT calculation
+
+    Returns:
+    xarray.Dataset   
+        Dataset with fields ready for xwmt processing
+
+    """
+    if 'wfo' in ds:
+        ds['wfo'] = ds['wfo']*-1
+    elif 'vsf' in ds:
+        ds['wfo'] = ds['vsf']
+    ds['wet'] = xr.where(~np.isnan(ds.tos), 1, 0)
+    ds['sfdsi'] = xr.zeros_like(ds['hfds']).rename('sfdsi')
+    return ds
+
+
+def make_ds(ds):
+    """
+    Applies all preprocessing needed for regions and xwmt conventions
+
+    Parameters:
+    ds: xarray.Dataset
+        Dataset that includes fields needed for calculation
+
+    Returns:
+    xarray.Dataset
+
+    """
+    ds_preproc = wmt_preproc(ds)
+    ds_xwmt = make_spna_masks(ds_preproc)
+    return ds_xwmt
+
+def calc_wmt(ds, density):
+    """
+    calculation of WMT for entire regions using xwmt 
+
+    Parameters:
+    ds: xarray.Dataset
+        Preprocessed dataset with all fields needed for WMT
+    density: string
+        Keyword that describes which xwmt function will be called
+         
+
+    Returns: 
+    xarray.Dataset
+        Dataset with WMT as a function of sigma only
+    """
+
+    #xwmt_ds = make_ds(ds, region=region)
+    ds_preproc = wmt_preproc(ds)
+    ds_mask = make_spna_masks(ds_preproc)
+    xwmt_init = xwmt.swmt(ds_mask)
+    if density == 'sigma0':
+        bins = np.arange(24.5, 29.6, 0.1)
+    elif density == 'sigma2':
+        bins = np.arange(33.15, 38.65, 0.1)
+    ds_wmt = xwmt_init.G(density, bins=bins)
+    ds_wmt = ds_wmt.to_dataset(name='wmt')
+    ds_wmt_decomp = xwmt_init.G(density, bins=bins, group_tend=False)
+    print(ds_wmt_decomp)
+    #ds_wmt['heat'] = ds_wmt_decomp['heat']
+    #ds_wmt['freshwater'] = ds_wmt_decomp['freshwater']
+    return ds_wmt
+
+def calc_maps(ds, density):
+    """
+    calculation of WMT in each grid cell as a function of sigma using xwmt 
+
+    Parameters:
+    ds: xarray.Dataset
+        Preprocessed dataset with all fields needed for WMT
+    density: string
+        Keyword that describes which xwmt function will be called
+         
+
+    Returns: 
+    xarray.Dataset
+        Dataset with WMT as a function of sigma and location
+    """
+
+    ds_preproc = wmt_preproc(ds)
+    ds_mask = make_spna_masks(ds_preproc)
+    ds_mask.time.attrs['calendar_type'] = 'noleap'
+    if density == 'sigma0':
+        vals = np.arange(26, 28.6, 0.2)
+    if density == 'sigma2':
+        vals = np.arange(35.5,38,0.5)
+    xwmt_init = xwmt.swmt(ds_mask.sel(region=region))
+    wmt_maps_decomp = xwmt_init.isosurface_mean(density, val=vals,
+                                                ti=xwmt_init.ds.time[0],
+                                                tf=xwmt_init.ds.time[-1],
+                                                group_tend=False)
+    wmt_maps = xwmt_init.isosurface_mean(density, val=vals,
+                                         ti=xwmt_init.ds.time[0],
+                                         tf=xwmt_init.ds.time[-1])
+    wmt_maps_decomp['total'] = wmt_maps
+    return wmt_maps_decomp
+
+def calc_dens(ds, density):
+    """
+    calculation of density using xwmt 
+
+    Parameters:
+    ds: xarray.Dataset
+        Preprocessed dataset with all fields needed for WMT
+    density: string
+        Keyword that describes which xwmt function will be called
+         
+
+    Returns: 
+    xarray.Dataset
+        Dataset with density
+    """
+
+    ds_preproc = wmt_preproc(ds)
+    ds_mask = make_spna_masks(ds_preproc)
+    xwmt_init = xwmt.swmt(ds_mask)
+    xwmt_den = xwmt_init.get_density(density)
+    xwmt_den_ar = xwmt_den[2].isel(lev_outer=0)
+    xwmt_den_ds = xwmt_den_ar.to_dataset(name=density)
+    return xwmt_den_ds
+
+
+#### PART 3 PLOTTING
+
+def wmt_plot_byregion(ds_benchmark, ds_model, save=False, savedir='./'):
+    """
+    POD plot of WMT lines by region in model versus observational benchmarks
+
+    Parameters:
+    ds_benchmark: xarray.Dataset
+        dataset with observational benchmarks from Low et al. 
+    ds_model: xarray.Dataset
+        dataset with wmt in model simulation calculated using xwmt
+    save: boolean, optional
+        save figure or not for POD 
+    savedir: string, optional
+        location where figure is saved
+
+
+    """
+    #get time mean wmt from obs benchmarks
+    wmt_benchmark =  ds_benchmark['wmt']
+
+    #mean, min, max of WMT in each region needed for plot
+    wmt_benchmark_mean = wmt_benchmark.mean('benchmark')
+    wmt_benchmark_min = wmt_benchmark.min('benchmark')
+    wmt_benchmark_max = wmt_benchmark.max('benchmark')
+
+    #get time mean model  wmt
+    wmt_model = ds_model['wmt']/1e6
+
+    
+    #add wmt plot
+    fig = plt.figure(figsize=(6,10), layout='constrained')
+
+    selected_regions = ['Subpolar North Atlantic', 'Nordic Sea','Labrador Sea', 'Subpolar Gyre SW', 'Irminger-Icelandic Sea', 'Subpolar Gyre SE']
+    region_dim = wmt_benchmark.region
+    
+    numreg = len(selected_regions)
+    gs = GridSpec(numreg, 1, figure=fig)
+
+    #add WMT by region
+
+    minwmt = min(wmt_benchmark_min.min(['region', 'sigma2']), wmt_model.min(['region', 'sigma2'])).values.item()
+    maxwmt = max(wmt_benchmark_max.max(['region', 'sigma2']), wmt_model.max(['region', 'sigma2'])).values.item()
+    buffer = (maxwmt-minwmt)/20
+    minwmt = minwmt-buffer
+    maxwmt = maxwmt+buffer
+
+    minsig = min(wmt_benchmark.sigma2.min(), wmt_model.sigma2.min()).values.item()
+    maxsig = max(wmt_benchmark.sigma2.max(), wmt_model.sigma2.max()).values.item()
+    
+    for rr in range(numreg):
+        reg = selected_regions[rr]
+        bool_reg = region_dim == reg
+        
+        ax = fig.add_subplot(gs[rr,0])
+        ax.plot(wmt_benchmark_mean.sigma2, wmt_benchmark_mean.sel(region=bool_reg).squeeze(), color='black', label='benchmarks')
+        ax.fill_between(wmt_benchmark_mean.sigma2, wmt_benchmark_min.sel(region=bool_reg).squeeze(), wmt_benchmark_max.sel(region=bool_reg).squeeze(),  alpha=0.5, color='gray')
+        ax.plot(wmt_model.sigma2, wmt_model.sel(region=bool_reg).squeeze(), color='red', label='model')
+        if rr==0: ax.legend(loc='upper right')
+        ax.text(0.05, 0.8, reg, transform=ax.transAxes)
+        
+        ax.set_ylim(minwmt, maxwmt)
+        ax.set_xlim(minsig, maxsig)
+        
+        ax.set_ylabel('WMT (Sv)')
+        ax.axhline(0, color='gray', alpha=0.8, linewidth=1)
+        ax.grid(color='gray', linewidth=1, linestyle='dashed', alpha=0.5)
+        #[ax.axvline(vv, color='gray', alpha=0.8, linewidth=1) for vv in np.arange(int(np.floor(minsig))+1,int(np.ceil(maxsig)),1)]
+        if rr == numreg-1: 
+            ax.set_xlabel('$\sigma_{2}$ (kg m$^{-3}$)')
+   
+    #Save Plots
+    if save:
+        plotname = savedir+'/wmt_lineplot_byregion.png'
+        plt.savefig(plotname)
+
+    return
+
+
+
