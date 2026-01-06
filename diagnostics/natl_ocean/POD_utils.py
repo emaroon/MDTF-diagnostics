@@ -7,6 +7,7 @@ import gsw_xarray as gsw
 from numba import guvectorize
 import cftime
 import xwmt
+import pandas as pd
 
 # Import Plotting Tools
 import cartopy.crs as ccrs
@@ -18,6 +19,7 @@ from matplotlib.colors import BoundaryNorm
 
 # Import Colors
 import matplotlib.colors as mcolors
+from matplotlib.colors import LinearSegmentedColormap
 
 # Warnings are hidden with the below code. Comment out if you want warnings
 import warnings
@@ -636,7 +638,7 @@ def ScatterPlot_Error(ds_x, var_x, ds_y, var_y, focus_model, save=False, savedir
 #### PART 3 CALCULATION
 
 
-def compute_wmt(ds, calc_type, density, regrid=False, verbose=True):
+def compute_wmt(ds, calc_type, density, dsigma, dclasses=np.empty(0), regrid=False, verbose=True):
     """
     Computes water mass transformation in the subpolar North Atlantic and optionally regrids to 1x1 grid.
      
@@ -652,6 +654,10 @@ def compute_wmt(ds, calc_type, density, regrid=False, verbose=True):
     density: string
          Keyword with sigma variable to use (i.e., sigma2 or sigma0)
          sigma2 implemented in the POD for comparison to AMOC(sigma2)
+    dsigma: float
+         width of sigma bins
+    dclasses: numpy array, optional
+         array with water mass values to use for WMT calculations
     regrid: boolean, optional
          Regrids to regular 1x1 grid 
     verbose: boolean, optional
@@ -661,11 +667,11 @@ def compute_wmt(ds, calc_type, density, regrid=False, verbose=True):
         Dataset with water mass transformation in SPNA regions. 
     """
     if calc_type == 'WMT':
-        ds_wmt = calc_wmt(ds, density)
+        ds_wmt = calc_wmt(ds, density, dclasses, dsigma)
     if calc_type == 'MAPS':
-        ds_wmt = calc_maps(ds, density)
+        ds_wmt = calc_maps(ds, density, dclasses, dsigma)
     if calc_type == 'DENS':
-        ds_wmt = calc_dens(ds, density)
+        ds_wmt = calc_dens(ds, density, dclasses)
     if calc_type == 'DS':
         ds_wmt = make_ds(ds)
 
@@ -756,7 +762,7 @@ def make_ds(ds):
     ds_xwmt = make_spna_masks(ds_preproc)
     return ds_xwmt
 
-def calc_wmt(ds, density):
+def calc_wmt(ds, density, dclasses, dsigma):
     """
     calculation of WMT for entire regions using xwmt 
 
@@ -765,7 +771,10 @@ def calc_wmt(ds, density):
         Preprocessed dataset with all fields needed for WMT
     density: string
         Keyword that describes which xwmt function will be called
-         
+    dclasses: numpy array
+        User-defined array of water mass classes        
+    dsigma: float
+        Width of sigma bins
 
     Returns: 
     xarray.Dataset
@@ -776,10 +785,12 @@ def calc_wmt(ds, density):
     ds_preproc = wmt_preproc(ds)
     ds_mask = make_spna_masks(ds_preproc)
     xwmt_init = xwmt.swmt(ds_mask)
-    if density == 'sigma0':
-        bins = np.arange(24.5, 29.6, 0.1)
-    elif density == 'sigma2':
-        bins = np.arange(33.15, 38.65, 0.1)
+    if (density == 'sigma0') and (len(dclasses)==0):
+        bins = np.arange(24.5, 29.6, dsigma)
+    elif (density == 'sigma2') and (len(dclasses)==0):
+        bins = np.arange(33.1, 38.6, dsigma)
+    else: 
+        bins = dclasses
     ds_wmt = xwmt_init.G(density, bins=bins)
     ds_wmt = ds_wmt.to_dataset(name='wmt')
     ds_wmt_decomp = xwmt_init.G(density, bins=bins, group_tend=False)
@@ -788,7 +799,7 @@ def calc_wmt(ds, density):
     #ds_wmt['freshwater'] = ds_wmt_decomp['freshwater']
     return ds_wmt
 
-def calc_maps(ds, density):
+def calc_maps(ds, density, dclasses, dsigma):
     """
     calculation of WMT in each grid cell as a function of sigma using xwmt 
 
@@ -797,29 +808,46 @@ def calc_maps(ds, density):
         Preprocessed dataset with all fields needed for WMT
     density: string
         Keyword that describes which xwmt function will be called
-         
+    dclasses: numpy array
+        User-defined values of water masses for maps  
+    dsigma: float
+        Widht of sigma bins  
 
     Returns: 
     xarray.Dataset
         Dataset with WMT as a function of sigma and location
     """
 
+    print(dclasses, len(dclasses))
     ds_preproc = wmt_preproc(ds)
     ds_mask = make_spna_masks(ds_preproc)
     ds_mask.time.attrs['calendar_type'] = 'noleap'
-    if density == 'sigma0':
-        vals = np.arange(26, 28.6, 0.2)
-    if density == 'sigma2':
-        vals = np.arange(35.5,38,0.5)
-    xwmt_init = xwmt.swmt(ds_mask.sel(region=region))
-    wmt_maps_decomp = xwmt_init.isosurface_mean(density, val=vals,
-                                                ti=xwmt_init.ds.time[0],
-                                                tf=xwmt_init.ds.time[-1],
-                                                group_tend=False)
-    wmt_maps = xwmt_init.isosurface_mean(density, val=vals,
-                                         ti=xwmt_init.ds.time[0],
-                                         tf=xwmt_init.ds.time[-1])
-    wmt_maps_decomp['total'] = wmt_maps
+    if (density == 'sigma0') and (len(dclasses)==0):
+        vals = np.arange(26, 28.6, dsigma)
+    elif (density == 'sigma2') and (len(dclasses)==0):
+        vals = np.arange(35.5,38,dsigma)
+    else: 
+        vals = dclasses
+    xwmt_init = xwmt.swmt(ds_mask.sel(region='Subpolar North Atlantic'))
+   # wmt_maps_decomp = xwmt_init.isosurface_mean(density, val=vals,
+   #                                             ti=xwmt_init.ds.time[0],
+   #                                             tf=xwmt_init.ds.time[-1],
+   #                                             dl=dsigma,
+   #                                             group_tend=False)
+   # wmt_maps = xwmt_init.isosurface_mean(density, val=vals,
+   #                                      ti=xwmt_init.ds.time[0],
+   #                                      tf=xwmt_init.ds.time[-1],
+   #                                      dl=dsigma)
+#    wmt_maps_decomp = xwmt_init.F(density,  group_tend=False)
+
+    temp_array = []
+    for dd in vals:
+        print(dd) 
+        trans1 =  xwmt_init.F(density, bins = np.array([dd-dsigma/2, dd+dsigma/2]), group_tend=True)
+        temp_array.append(trans1) 
+        
+    wmt_maps_decomp = xr.concat(temp_array, dim='sigma2')
+#    wmt_maps_decomp['total'] = wmt_maps
     return wmt_maps_decomp
 
 def calc_dens(ds, density):
@@ -849,7 +877,7 @@ def calc_dens(ds, density):
 
 #### PART 3 PLOTTING
 
-def wmt_plot_byregion(ds_benchmark, ds_model, save=False, savedir='./'):
+def wmt_plot_byregion(ds_benchmark, ds_model, sigma_classes, save=False, savedir='./'):
     """
     POD plot of WMT lines by region in model versus observational benchmarks
 
@@ -858,6 +886,8 @@ def wmt_plot_byregion(ds_benchmark, ds_model, save=False, savedir='./'):
         dataset with observational benchmarks from Low et al. 
     ds_model: xarray.Dataset
         dataset with wmt in model simulation calculated using xwmt
+    sigma_classes: list
+        lower bound of sigma classes of interest for extra analysis 
     save: boolean, optional
         save figure or not for POD 
     savedir: string, optional
@@ -913,10 +943,11 @@ def wmt_plot_byregion(ds_benchmark, ds_model, save=False, savedir='./'):
         
         ax.set_ylabel('WMT (Sv)')
         ax.axhline(0, color='gray', alpha=0.8, linewidth=1)
+        [ax.axhline(ss, color='green', alpha=0.8, linewidth=2) for ss in sigma_classes]
         ax.grid(color='gray', linewidth=1, linestyle='dashed', alpha=0.5)
         #[ax.axvline(vv, color='gray', alpha=0.8, linewidth=1) for vv in np.arange(int(np.floor(minsig))+1,int(np.ceil(maxsig)),1)]
         if rr == numreg-1: 
-            ax.set_xlabel('$\sigma_{2}$ (kg m$^{-3}$)')
+            ax.set_xlabel('$\\sigma_{2}$ (kg m$^{-3}$)')
    
     #Save Plots
     if save:
@@ -927,3 +958,91 @@ def wmt_plot_byregion(ds_benchmark, ds_model, save=False, savedir='./'):
 
 
 
+def wmt_plot_maps(ds_benchmark, ds_model, dimnames, sigma_classes, save=False, savedir='./'):
+    """
+    POD plot of WMT lines by region in model versus observational benchmarks
+
+    Parameters:
+    ds_benchmark: xarray.Dataset
+        dataset with observation-based benchmarks from Low et al. 
+    ds_model: xarray.Dataset
+        dataset with sigma in model simulation calculated using xwmt
+    dimnames: list
+        list that includes dimension names for model output
+    sigma_classes: list
+        lower bound of sigma classes of interest for maps 
+    save: boolean, optional
+        save figure or not for POD 
+    savedir: string, optional
+        location where figure is saved
+
+
+    """
+
+    nsigma = len(sigma_classes)
+    gs=GridSpec(nsigma,2)
+
+    dmax = 0.2
+    ddel = 0.02
+
+    time_coord = dimnames[0]
+    lon_coord = dimnames[1]
+    lat_coord = dimnames[2]
+
+    #correct lon for North Atlantic
+    model_lon = ds_model['lon'] #ok to hard-code 'lon' and 'lat' here b/c this is output from xwmt
+    if model_lon.max()>345:
+        print('correcting lat for dateline')
+        lonvals = model_lon.values
+        lonvals[lonvals>180]=lonvals[lonvals>180]-360
+        model_lon.values = lonvals
+        ds_model = ds_model.assign_coords({'lon':model_lon})
+    model_lat = ds_model['lat']
+
+
+    #making mpl colormap from ncl colortable
+    cmap_name='nrl_sirkes'
+    colortab=pd.read_csv('https://www.ncl.ucar.edu/Document/Graphics/ColorTables/Files/'+cmap_name+'.rgb',sep='\\s+')
+    cmap = LinearSegmentedColormap.from_list(cmap_name, colortab.values/255, N=101)
+    cmap.set_bad(color='white')
+
+    denslevs = np.concatenate((np.arange(-1*dmax,0,ddel),np.arange(ddel,dmax+ddel/2,ddel)))
+
+    benchmark_mean = ds_benchmark['wmt'].mean('benchmark')
+    sigma2_mask_ben = ds_benchmark['wmt_freq'].mean('benchmark')     
+    sigma2_mask_mod = xr.where(np.abs(ds_model)<1e-11, 0, 1)
+
+    f=plt.figure(figsize=(12,2.25*nsigma))
+    #loop through density classes of interest
+    for ii,ss in enumerate(sigma_classes):
+        #obs outcrop frequency
+        obs_outcrop = sigma2_mask_ben.sel(sigma2=ss, method='nearest')
+        #model outcrop frequency
+        mod_outcrop = sigma2_mask_mod.sel(sigma2=ss, method='nearest').mean(time_coord) 
+
+        #model plots
+        ax=plt.subplot(gs[ii,0],projection = ccrs.PlateCarree())    
+        cs2=plt.pcolormesh(model_lon, model_lat, ds_model.sel(sigma2=ss,method='nearest').mean(time_coord)/1e6, cmap=cmap, vmin=-2e-11, vmax=2e-11, transform=ccrs.PlateCarree())
+        cs=plt.contour(model_lon, model_lat, mod_outcrop, np.arange(0.1,0.31, 0.1), cmap=plt.cm.viridis, transform=ccrs.PlateCarree())
+        plt.title('Model: '+'$\\sigma_{2}$='+str(ss)[0:4]+'-'+str(ss+0.1)[0:4]+' kg/m$^3$')
+        plt.colorbar(cs2, label='trans. (Sv/m$^2$)')
+        ax.coastlines()
+        ax.set_extent([-80,30,45,80], crs=ccrs.PlateCarree())
+    
+        #benchmark plots
+        ax=plt.subplot(gs[ii,1],projection = ccrs.PlateCarree())
+        cs2=plt.pcolormesh(ds_benchmark.lon, ds_benchmark.lat, ds_benchmark['wmt'].sel(sigma2=ss,method='nearest').mean('benchmark')/1e6, cmap=cmap, vmin=-2e-11, vmax=2e-11, transform=ccrs.PlateCarree())
+        cs=plt.contour(obs_outcrop.lon, obs_outcrop.lat, obs_outcrop, np.arange(0.1,0.31, 0.1),  cmap=plt.cm.viridis, transform=ccrs.PlateCarree())
+        ax.set_extent([-80,30,45,80], crs=ccrs.PlateCarree()) 
+        ax.coastlines()
+        plt.title('Obs: '+'$\\sigma_{2}$='+str(ss)[0:4]+'-'+str(ss+0.1)[0:4]+' kg/m$^3$')
+        plt.colorbar(cs2, label='trans. (Sv/m$^2$)')
+    
+    plt.tight_layout()
+
+    #Save Plots
+    if save:
+        plotname = savedir+'/wmt_maps_selectclasses.png'
+        plt.savefig(plotname)
+
+    return

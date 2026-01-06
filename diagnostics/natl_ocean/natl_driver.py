@@ -75,6 +75,7 @@ import dask
 import os
 import yaml
 import POD_utils
+import numpy as np
 
 print('Starting North Atlantic Ocean POD')
 
@@ -142,16 +143,8 @@ model_temp_dataset = xr.open_dataset(os.environ["THETAO_FILE"])
 # Salt
 model_salt_dataset = xr.open_dataset(os.environ["SO_FILE"])
 
-# SHF
-model_hfds_dataset = xr.open_dataset(os.environ["HFDS_FILE"])
 
-# FW
-if wfo_mod:
-    model_fw_dataset = xr.open_dataset(os.environ["WFO_FILE"])
-elif wfo_mod==False:
-    model_fw_dataset = xr.open_dataset(os.environ["VSF_FILE"]) 
-
-# TArea
+# Tracer point centered cell Area
 model_area_dataset = xr.open_dataset(os.environ["AREACELLO_FILE"])
 
 #VOLUME
@@ -187,7 +180,7 @@ obsdir = os.environ["OBS_DATA"]
 
 # Open OMIP data  # TODO: this should probably just load omip above but file not ingested yet!
 #TODO - ADD THIS TO "OBS" DIR 
-omip_file = '/glade/work/brendanmy/S_Yeager/Sub2Sub/data_archive/POD_data/omip2.cycle1.1989_2018.mld_sic_t200_s200_sigma200.nc'
+omip_file = '/glade/work/brendanmy/S_Yeager/Sub2Sub/data_archive/POD_data/omip2.cycle1.1989_2018.0-200m.mld_sic_t_s_sigma.nc'
 # omip_file = omip_dir+'omip2.cycle1.1989_2018.mld_sic_t200_s200_sigma200.nc'
 ds_model = xr.open_dataset(omip_file).isel(OMIP=0).load()
 #ds_model = xr.open_dataset(omip_file).load()
@@ -255,12 +248,38 @@ print('North Atlantic Ocean POD Part 1: North Atlantic Bias Assessment finished 
 # print('North Atlantic Ocean POD Part 2: AMOC finished successfully!')
 
 # PART 3: SURFACE-FORCED WATER MASS TRANSFORMATION ###############################
-# LOAD IN WMT BENCHMARKS
 
-#Loading in pre-computed total WMT from benchmarks
+# LOAD IN WMT BENCHMARKS
+#Loading in pre-computed total WMT from observation-based benchmarks
 ds_wmt_benchmarks = xr.open_dataset(obsdir+'/obs_wmt_sigma2_1982-2009_spna_decomp_mean.nc')
+ds_dflux_benchmarks = xr.open_dataset(obsdir+'/obs.maps_freq.sigma2.1982-2009_decomp_mean_1x1.nc')
+
+#Need to read THetao and Salt back in with chunks for xwmt calculation
+#using chunks breaks above ufuncs somhow
+# ThetaO
+model_temp_dataset = xr.open_dataset(os.environ["THETAO_FILE"], chunks={lev_coord:1})
+
+# Salt
+model_salt_dataset = xr.open_dataset(os.environ["SO_FILE"], chunks={lev_coord:1})
+
+# SHF
+model_hfds_dataset = xr.open_dataset(os.environ["HFDS_FILE"],chunks ={})
+
+# FW
+if wfo_mod:
+    model_fw_dataset = xr.open_dataset(os.environ["WFO_FILE"], chunks = {})
+elif wfo_mod==False:
+    model_fw_dataset = xr.open_dataset(os.environ["VSF_FILE"], chunks = {}) 
+
+
+# Tracer point centered cell Area
+model_area_dataset = xr.open_dataset(os.environ["AREACELLO_FILE"], chunks = {})
+
+
 
 #Putting together dataset object for WMT calculations
+model_temp_dataset = model_temp_dataset.chunk({lev_coord:1})
+model_salt_dataset = model_salt_dataset.chunk({lev_coord:1})
 ds_target = model_temp_dataset.isel({lev_coord:0}).drop([lev_coord])
 ds_target[salt_var] = model_salt_dataset[salt_var].isel({lev_coord:0}).drop([lev_coord])
 ds_target[hfds_var] = model_hfds_dataset[hfds_var] 
@@ -268,22 +287,34 @@ ds_target[fw_var] = model_fw_dataset[fw_var]
 ds_target[areacello_var] = area
 ds_target = ds_target.rename({temp_var:'tos', salt_var:'sos',lat_coord:'y', lon_coord:'x'})
 
+#find minimum y to reduce size of grid and make calculation more efficient
+miny = ds_target['y'].where(ds_target['lat']<44).max('y').min('x')
+maxy = ds_target['y'].max('y')
+ds_target = ds_target.sel(y=slice(miny,maxy))
+
 # Rechunking for efficiency. Set for 1x1 size model
 ds_target = ds_target.unify_chunks()
-ds_target = ds_target.chunk({'y':-1, 'x':-1, 'time': 20})
+ds_target = ds_target.chunk({'y':-1, 'x':-1, 'time': 1})
 
-# PERFORM MODEL CALCULATIONS -----------------------------------------------------------
-ds_wmt_lines = POD_utils.compute_wmt(ds_target, 'WMT', 'sigma2', regrid=False) 
+#set classes of interest for maps here
+sigma_classes = np.array([35.0, 36.0, 36.5])
+dsigma = 0.1 #bin size for WMT
+
+
+# PERFORM MODEL CALCULATIONS -------------------------------------------------------
+#summed over region
+ds_wmt_lines = POD_utils.compute_wmt(ds_target, 'WMT', 'sigma2', dsigma,  regrid=False) 
 ds_wmt_lines = ds_wmt_lines.mean(time_coord)
 
+#maps of transformation at specified water classes
+ds_wmt_maps = POD_utils.compute_wmt(ds_target, 'MAPS', 'sigma2', dsigma, dclasses=sigma_classes, regrid=False)
 
-# CREATE PLOTS -------------------------------------------------------------------
+# CREATE PLOTS ---------------------------------------------------------------------
 # WMT BY REGION
-POD_utils.wmt_plot_byregion(ds_wmt_benchmarks, ds_wmt_lines, save=True, savedir=outmod_dir)
+POD_utils.wmt_plot_byregion(ds_wmt_benchmarks, ds_wmt_lines, sigma_classes, save=True, savedir=outmod_dir)
 
-
-# WMT MAPS AT A FEW SIGMA CLASSES
-
+# DENSITY FLUX MAPS AT A FEW SPECIFIED WATER MASSES
+POD_utils.wmt_plot_maps(ds_dflux_benchmarks, ds_wmt_maps, [time_coord, lon_coord, lat_coord], sigma_classes, save=True, savedir=outmod_dir)
 
 # WMT(45N+) WITH AMOC(SIGMA)
 
@@ -293,4 +324,4 @@ print('North Atlantic Ocean POD Part 3: Surface-Forced Water Mass Transformation
 # PART 4: SYNTHESIS ##############################################################
 # Wrap-up by closing datasets that have been opened and informing user of successful completion
 
-print("North Atlantic Ocean POD finished successfully!")
+print("Entire North Atlantic Ocean POD suite finished successfully!")
